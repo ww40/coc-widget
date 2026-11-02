@@ -1,4 +1,4 @@
-package dev.ww40.cocwidget.data
+package dev.ww40.buildertimer.data
 
 import android.content.Context
 import kotlinx.serialization.Serializable

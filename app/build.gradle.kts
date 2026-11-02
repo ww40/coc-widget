@@ -5,16 +5,39 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+// Release signing credentials come from ~/.gradle/gradle.properties or environment variables, never the repo.
+fun signingValue(name: String): String? =
+    providers.gradleProperty(name).orElse(providers.environmentVariable(name)).orNull
+
+val releaseKeystore = signingValue("BUILDERTIMER_KEYSTORE")
+
 android {
-    namespace = "dev.ww40.cocwidget"
+    namespace = "dev.ww40.buildertimer"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "dev.ww40.cocwidget"
+        applicationId = "dev.ww40.buildertimer"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
         versionName = "0.1.0"
+    }
+
+    signingConfigs {
+        if (releaseKeystore != null) {
+            create("release") {
+                storeFile = file(releaseKeystore)
+                storePassword = signingValue("BUILDERTIMER_KEYSTORE_PASSWORD")
+                keyAlias = signingValue("BUILDERTIMER_KEY_ALIAS")
+                keyPassword = signingValue("BUILDERTIMER_KEY_PASSWORD")
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig = signingConfigs.findByName("release")
+        }
     }
 
     buildFeatures {

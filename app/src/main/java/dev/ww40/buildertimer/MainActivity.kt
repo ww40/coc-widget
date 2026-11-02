@@ -1,4 +1,4 @@
-package dev.ww40.cocwidget
+package dev.ww40.buildertimer
 
 import android.Manifest
 import android.app.Activity
@@ -9,9 +9,9 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
-import dev.ww40.cocwidget.data.PlayerNameStore
-import dev.ww40.cocwidget.sync.SyncActivity
-import dev.ww40.cocwidget.widget.WidgetRefresher
+import dev.ww40.buildertimer.data.PlayerNameStore
+import dev.ww40.buildertimer.sync.SyncActivity
+import dev.ww40.buildertimer.widget.WidgetRefresher
 import kotlinx.coroutines.launch
 
 /** Setup screen: explains the sync flow, stores the player name and asks for notification permission. */

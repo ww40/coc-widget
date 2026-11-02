@@ -1,4 +1,4 @@
-package dev.ww40.cocwidget.data
+package dev.ww40.buildertimer.data
 
 data class Upgrade(
     val dataId: Int,

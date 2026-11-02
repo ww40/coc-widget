@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Clash Tracker</string>
+    <string name="app_name">Builder Timer Widget</string>
     <string name="widget_description">Builder, lab and pet upgrade timers</string>
-    <string name="setup_instructions">1. Add the Clash Tracker widget to your home screen.\n\n2. In Clash of Clans: Settings → More Settings → Data Export → Copy.\n\n3. Tap Sync on the widget (or the button below).\n\nRe-sync whenever you start new upgrades. You\'ll get a notification as each one finishes.</string>
+    <string name="setup_instructions">1. Add the Builder Timer widget to your home screen.\n\n2. In Clash of Clans: Settings → More Settings → Data Export → Copy.\n\n3. Tap Sync on the widget (or the button below).\n\nRe-sync whenever you start new upgrades. You\'ll get a notification as each one finishes.</string>
     <string name="sync_from_clipboard">Sync from clipboard</string>
     <string name="sync_error_title">No village data found</string>
     <string name="sync_error_message">Your clipboard doesn\'t contain a Clash of Clans village export.\n\n1. Open Clash of Clans\n2. Go to Settings → More Settings → Data Export → Copy\n3. Come back and press ⟳ Sync on the widget again</string>

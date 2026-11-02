@@ -1,19 +1,19 @@
-package dev.ww40.cocwidget.sync
+package dev.ww40.buildertimer.sync
 
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.ClipboardManager
 import android.util.Log
 import android.widget.Toast
-import dev.ww40.cocwidget.R
-import dev.ww40.cocwidget.data.ExportFormatException
-import dev.ww40.cocwidget.data.ExportParser
-import dev.ww40.cocwidget.data.GameData
-import dev.ww40.cocwidget.data.SnapshotStore
-import dev.ww40.cocwidget.data.VillageSnapshot
-import dev.ww40.cocwidget.data.formatAgo
-import dev.ww40.cocwidget.notify.UpgradeAlarms
-import dev.ww40.cocwidget.widget.WidgetRefresher
+import dev.ww40.buildertimer.R
+import dev.ww40.buildertimer.data.ExportFormatException
+import dev.ww40.buildertimer.data.ExportParser
+import dev.ww40.buildertimer.data.GameData
+import dev.ww40.buildertimer.data.SnapshotStore
+import dev.ww40.buildertimer.data.VillageSnapshot
+import dev.ww40.buildertimer.data.formatAgo
+import dev.ww40.buildertimer.notify.UpgradeAlarms
+import dev.ww40.buildertimer.widget.WidgetRefresher
 import kotlinx.coroutines.launch
 import java.io.IOException
 

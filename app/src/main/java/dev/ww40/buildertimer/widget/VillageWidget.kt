@@ -1,4 +1,4 @@
-package dev.ww40.cocwidget.widget
+package dev.ww40.buildertimer.widget
 
 import android.content.Context
 import androidx.compose.runtime.Composable
@@ -40,13 +40,13 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
-import dev.ww40.cocwidget.data.PlayerNameStore
-import dev.ww40.cocwidget.data.SnapshotStore
-import dev.ww40.cocwidget.data.Upgrade
-import dev.ww40.cocwidget.data.VillageSnapshot
-import dev.ww40.cocwidget.data.formatAgo
-import dev.ww40.cocwidget.data.formatRemaining
-import dev.ww40.cocwidget.sync.SyncActivity
+import dev.ww40.buildertimer.data.PlayerNameStore
+import dev.ww40.buildertimer.data.SnapshotStore
+import dev.ww40.buildertimer.data.Upgrade
+import dev.ww40.buildertimer.data.VillageSnapshot
+import dev.ww40.buildertimer.data.formatAgo
+import dev.ww40.buildertimer.data.formatRemaining
+import dev.ww40.buildertimer.sync.SyncActivity
 
 private val OUTER_PADDING = 12.dp
 private val ROW_HEIGHT = 28.dp
@@ -81,7 +81,7 @@ private fun WidgetContent() {
         modifier = GlanceModifier.fillMaxSize().cornerRadius(16.dp)
             .background(WidgetPalette.background).padding(OUTER_PADDING),
     ) {
-        Header(snapshot?.headerTitle(playerName) ?: playerName ?: "Clash Tracker")
+        Header(snapshot?.headerTitle(playerName) ?: playerName ?: "Builder Timer")
         Spacer(GlanceModifier.height(8.dp))
         if (snapshot == null) {
             Text(

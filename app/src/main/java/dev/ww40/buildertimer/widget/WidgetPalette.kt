@@ -1,4 +1,4 @@
-package dev.ww40.cocwidget.widget
+package dev.ww40.buildertimer.widget
 
 import androidx.compose.ui.graphics.Color
 import androidx.glance.unit.ColorProvider

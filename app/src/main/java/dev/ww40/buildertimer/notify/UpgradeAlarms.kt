@@ -1,4 +1,4 @@
-package dev.ww40.cocwidget.notify
+package dev.ww40.buildertimer.notify
 
 import android.Manifest
 import android.app.AlarmManager
@@ -12,8 +12,8 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
-import dev.ww40.cocwidget.data.SnapshotStore
-import dev.ww40.cocwidget.data.VillageSnapshot
+import dev.ww40.buildertimer.data.SnapshotStore
+import dev.ww40.buildertimer.data.VillageSnapshot
 
 /**
  * One alarm per upgrade, keyed by its index in [VillageSnapshot.allUpgrades].

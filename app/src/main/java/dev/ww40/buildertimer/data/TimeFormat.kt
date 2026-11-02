@@ -1,4 +1,4 @@
-package dev.ww40.cocwidget.data
+package dev.ww40.buildertimer.data
 
 private const val SECONDS_PER_MINUTE = 60L
 private const val SECONDS_PER_HOUR = 3_600L
