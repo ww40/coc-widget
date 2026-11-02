@@ -4,6 +4,8 @@ Usage: python3 tools/generate_game_data.py <path/to/static_data.json>
 
 static_data.json ships inside the coc.py package (coc/static/static_data.json).
 Output maps each export ID to its name and the seconds needed to reach each level.
+Entries in game_data_overrides.json are merged on top, for items coc.py omits
+(e.g. troops still flagged unreleased when its data was last generated).
 """
 
 import json
@@ -11,7 +13,9 @@ import sys
 from pathlib import Path
 from typing import Any
 
-OUTPUT_PATH = Path(__file__).resolve().parent.parent / "app/src/main/assets/game_data.json"
+TOOLS_DIR = Path(__file__).resolve().parent
+OUTPUT_PATH = TOOLS_DIR.parent / "app/src/main/assets/game_data.json"
+OVERRIDES_PATH = TOOLS_DIR / "game_data_overrides.json"
 
 # Buildings and traps store the time to *reach* a level on that level's entry.
 BUILD_TIME_CATEGORIES = ("buildings", "traps")
@@ -47,6 +51,9 @@ def main() -> None:
         sys.exit(__doc__)
     static_data = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
     game_data = generate(static_data)
+    overrides = json.loads(OVERRIDES_PATH.read_text(encoding="utf-8"))
+    for data_id, override in overrides.items():
+        game_data[data_id] = {**game_data.get(data_id, {}), **override}
     OUTPUT_PATH.write_text(json.dumps(game_data, separators=(",", ":"), sort_keys=True), encoding="utf-8")
     print(f"Wrote {len(game_data)} entries to {OUTPUT_PATH}")
 

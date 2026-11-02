@@ -58,13 +58,19 @@ class ExportParserTest {
     }
 
     @Test
-    fun `falls back to a placeholder name for IDs newer than the game data`() {
+    fun `names troops missing from coc_py via the overrides file`() {
         val lab = snapshot.labUpgrades.single()
-        assertEquals("Unknown (4000109)", lab.name)
+        assertEquals("Artificer", lab.name)
         assertEquals(2, lab.targetLevel)
         assertNull(lab.totalSeconds)
         assertNull(lab.progress(EXPORTED_AT))
         assertEquals(lab, snapshot.labAssistantTarget)
+    }
+
+    @Test
+    fun `falls back to a placeholder name for IDs missing from the game data`() {
+        val parsed = parser.parse("""{"tag":"#A","timestamp":100,"units":[{"data":4009999,"lvl":1,"timer":60}]}""")
+        assertEquals("Unknown (4009999)", parsed.labUpgrades.single().name)
     }
 
     @Test

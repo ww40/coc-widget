@@ -24,7 +24,7 @@ pip download --no-deps coc.py -d /tmp/cocpy && unzip -o /tmp/cocpy/coc_py-*.whl 
 python3 tools/generate_game_data.py /tmp/cocpy/ext/coc/static/static_data.json
 ```
 
-IDs newer than that data show as `Unknown (<id>)` with an empty progress bar until it's regenerated.
+Items coc.py omits (e.g. troops still flagged unreleased when its data was generated) can be named in `tools/game_data_overrides.json`, which the generator merges in. Anything else missing shows as `Unknown (<id>)` with an empty progress bar.
 
 ## Behaviour notes
 
