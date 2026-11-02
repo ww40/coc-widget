@@ -123,6 +123,30 @@ class ExportParserTest {
     }
 
     @Test
+    fun `speeds up builder timers while a builder potion is active`() {
+        val parsed = parser.parse(
+            """{"tag":"#A","timestamp":100,"boosts":{"builder_boost":3600},""" +
+                """"buildings":[{"data":1000019,"lvl":16,"timer":30000},{"data":1000013,"lvl":17,"timer":100000}],""" +
+                """"heroes":[{"data":28000000,"lvl":94,"timer":36005}],""" +
+                """"units":[{"data":4000000,"lvl":1,"timer":30000}]}""",
+        )
+        val finishes = parsed.builderUpgrades.associate { it.name to it.finishesAtEpochSec - 100 }
+        assertEquals(3_000L, finishes["Hidden Tesla"])
+        assertEquals(3_605L, finishes["Barbarian King"])
+        assertEquals(100_000L - 36_000 + 3_600, finishes["Mortar"])
+        assertEquals(30_100L, parsed.labUpgrades.single().finishesAtEpochSec)
+    }
+
+    @Test
+    fun `leaves builder timers alone without a builder potion`() {
+        val parsed = parser.parse(
+            """{"tag":"#A","timestamp":100,"boosts":{"builder_boost":0,"clocktower_cooldown":10304},""" +
+                """"buildings":[{"data":1000019,"lvl":16,"timer":30000}]}""",
+        )
+        assertEquals(30_100L, parsed.builderUpgrades.single().finishesAtEpochSec)
+    }
+
+    @Test
     fun `ignores zero timers`() {
         val parsed = parser.parse("""{"tag":"#A","timestamp":100,"buildings":[{"data":1000005,"lvl":1,"timer":0}]}""")
         assertTrue(parsed.builderUpgrades.isEmpty())

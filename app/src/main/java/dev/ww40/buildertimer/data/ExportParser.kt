@@ -22,12 +22,13 @@ class ExportParser(private val gameData: GameData) {
             ?: throw ExportFormatException("Export has no player tag")
 
         val buildings = root.entries("buildings")
+        val builderBoost = (root["boosts"] as? JsonObject)?.long("builder_boost")?.coerceAtLeast(0) ?: 0
         return VillageSnapshot(
             tag = tag,
             townHallLevel = buildings.firstOrNull { it.int("data") == TOWN_HALL_ID }?.int("lvl"),
             exportedAtEpochSec = exportedAt,
             builderCount = builderCount(buildings),
-            builderUpgrades = upgrades(root, BUILDER_SECTIONS, exportedAt)
+            builderUpgrades = upgrades(root, BUILDER_SECTIONS, exportedAt) { boostedSeconds(it, builderBoost) }
                 .sortedBy { it.finishesAtEpochSec },
             labUpgrades = upgrades(root, LAB_SECTIONS, exportedAt).sortedBy { it.finishesAtEpochSec },
             petUpgrades = upgrades(root, PET_SECTIONS, exportedAt).sortedBy { it.finishesAtEpochSec },
@@ -44,7 +45,12 @@ class ExportParser(private val gameData: GameData) {
         return element as? JsonObject ?: throw ExportFormatException("Export is not a JSON object")
     }
 
-    private fun upgrades(root: JsonObject, sections: List<String>, exportedAt: Long): List<Upgrade> =
+    private fun upgrades(
+        root: JsonObject,
+        sections: List<String>,
+        exportedAt: Long,
+        realSeconds: (timer: Long) -> Long = { it },
+    ): List<Upgrade> =
         sections.flatMap { root.entries(it) }.mapNotNull { entry ->
             val timer = entry.long("timer")?.takeIf { it > 0 } ?: return@mapNotNull null
             val dataId = entry.int("data") ?: return@mapNotNull null
@@ -53,12 +59,22 @@ class ExportParser(private val gameData: GameData) {
                 dataId = dataId,
                 name = gameData.name(dataId),
                 targetLevel = targetLevel,
-                finishesAtEpochSec = exportedAt + timer,
+                finishesAtEpochSec = exportedAt + realSeconds(timer),
                 totalSeconds = gameData.upgradeSeconds(dataId, targetLevel),
                 isGoblin = entry.bool("extra"),
                 hasHelperAssigned = entry.bool("helper_recurrent"),
             )
         }
+
+    /**
+     * Export timers ignore an active Builder Potion, which makes builders work
+     * [BUILDER_BOOST_SPEEDUP]x faster for [boostSeconds] of real time.
+     */
+    private fun boostedSeconds(timer: Long, boostSeconds: Long): Long {
+        val boostedWork = boostSeconds * BUILDER_BOOST_SPEEDUP
+        if (timer <= boostedWork) return (timer + BUILDER_BOOST_SPEEDUP - 1) / BUILDER_BOOST_SPEEDUP
+        return timer - boostedWork + boostSeconds
+    }
 
     private fun builderCount(buildings: List<JsonObject>): Int =
         buildings.filter { it.int("data") in BUILDER_HOME_IDS }.sumOf { it.int("cnt") ?: 1 }
@@ -75,6 +91,7 @@ class ExportParser(private val gameData: GameData) {
         const val BUILDERS_HUT_ID = 1000015
         const val BOB_HUT_ID = 1000064
         private val BUILDER_HOME_IDS = setOf(BUILDERS_HUT_ID, BOB_HUT_ID)
+        const val BUILDER_BOOST_SPEEDUP = 10L
 
         private val BUILDER_SECTIONS = listOf("buildings", "traps", "heroes")
         private val LAB_SECTIONS = listOf("units", "spells", "siege_machines")

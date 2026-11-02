@@ -85,6 +85,7 @@ Items without an icon show a section emoji (🔨 builders, ⚗️ lab, 🐾 pets
 
 - Countdowns are minute-precision; widgets refresh every minute while the device is awake.
 - Finish notifications use inexact alarms, so they may arrive a few minutes late under Doze.
+- An active Builder Potion is included in builder finish times. Research and Pet Potions aren't yet.
 - Timers are only as current as the last sync; the widget footer turns amber once the last sync is over a day old.
 
 ## Credits and licence
