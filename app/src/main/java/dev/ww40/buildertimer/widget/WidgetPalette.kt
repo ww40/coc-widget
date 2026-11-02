@@ -11,6 +11,7 @@ object WidgetPalette {
     val muted = ColorProvider(Color(0xFFC9B79C))
     val syncButton = ColorProvider(Color(0xFFF5C542))
     val syncButtonText = ColorProvider(Color(0xFF3A2A1C))
+    val settingsButton = ColorProvider(Color(0xFF5A4330))
     val barTrack = ColorProvider(Color(0xFF26331A))
     val barFill = ColorProvider(Color(0xFF6DB33F))
     val rowText = ColorProvider(Color(0xFFFFFFFF))

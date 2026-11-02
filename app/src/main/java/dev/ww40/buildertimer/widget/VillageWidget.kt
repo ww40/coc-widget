@@ -36,6 +36,7 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
+import dev.ww40.buildertimer.MainActivity
 import dev.ww40.buildertimer.data.Settings
 import dev.ww40.buildertimer.data.SettingsStore
 import dev.ww40.buildertimer.data.SnapshotStore
@@ -122,6 +123,14 @@ private fun Header(title: String) {
             style = TextStyle(color = WidgetPalette.title, fontSize = 16.sp, fontWeight = FontWeight.Bold),
             maxLines = 1,
         )
+        Box(
+            modifier = GlanceModifier.cornerRadius(12.dp).background(WidgetPalette.settingsButton)
+                .padding(horizontal = 8.dp, vertical = 4.dp)
+                .clickable(actionStartActivity<MainActivity>()),
+        ) {
+            Text("⚙", style = TextStyle(color = WidgetPalette.title, fontSize = 14.sp))
+        }
+        Spacer(GlanceModifier.width(6.dp))
         Box(
             modifier = GlanceModifier.cornerRadius(12.dp).background(WidgetPalette.syncButton)
                 .padding(horizontal = 12.dp, vertical = 4.dp)

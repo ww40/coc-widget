@@ -2,6 +2,7 @@ package dev.ww40.buildertimer
 
 import android.Manifest
 import android.app.Activity
+import android.appwidget.AppWidgetManager
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -30,6 +31,7 @@ class MainActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        acceptWidgetConfiguration()
         setContentView(R.layout.activity_main)
         findViewById<Button>(R.id.sync_button).setOnClickListener {
             startActivity(Intent(this, SyncActivity::class.java))
@@ -37,6 +39,17 @@ class MainActivity : Activity() {
         findViewById<Button>(R.id.save_settings_button).setOnClickListener { saveSettings() }
         showSettings()
         requestNotificationPermission()
+    }
+
+    /**
+     * This screen doubles as the widgets' configure activity (long-press → Settings). Before
+     * Android 12 it also opens when a widget is added, and the launcher drops the widget unless
+     * the result is OK.
+     */
+    private fun acceptWidgetConfiguration() {
+        if (intent.action != AppWidgetManager.ACTION_APPWIDGET_CONFIGURE) return
+        val widgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
+        setResult(RESULT_OK, Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId))
     }
 
     private fun showSettings() {
