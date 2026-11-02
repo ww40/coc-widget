@@ -77,7 +77,7 @@ class ExportParserTest {
     @Test
     fun `names troops missing from coc_py via the overrides file`() {
         val lab = snapshot.labUpgrades.single()
-        assertEquals("Artificer", lab.name)
+        assertEquals("Ruin Witch", lab.name)
         assertEquals(2, lab.targetLevel)
         assertNull(lab.totalSeconds)
         assertNull(lab.progress(EXPORTED_AT))
