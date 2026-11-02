@@ -85,6 +85,14 @@ class ExportParserTest {
     }
 
     @Test
+    fun `names heroes missing from coc_py via the overrides file`() {
+        val parsed = parser.parse("""{"tag":"#A","timestamp":100,"heroes":[{"data":28000007,"lvl":15,"timer":60}]}""")
+        val hero = parsed.builderUpgrades.single()
+        assertEquals("Dragon Duke", hero.name)
+        assertEquals(16, hero.targetLevel)
+    }
+
+    @Test
     fun `falls back to a placeholder name for IDs missing from the game data`() {
         val parsed = parser.parse("""{"tag":"#A","timestamp":100,"units":[{"data":4009999,"lvl":1,"timer":60}]}""")
         assertEquals("Unknown (4009999)", parsed.labUpgrades.single().name)
