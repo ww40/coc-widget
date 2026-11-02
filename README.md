@@ -32,6 +32,12 @@ Open settings with the **⚙** button on the widget, by long-pressing a widget a
 
 Tap **Save** to apply; widgets update within a minute.
 
+## Updating
+
+Download the newest APK from [Releases](https://github.com/ww40/coc-widget/releases/latest) and open it to install over the old version. Your widgets, settings and last sync are kept.
+
+To get updates automatically, install [Obtainium](https://github.com/ImranR98/Obtainium) and add `https://github.com/ww40/coc-widget`. Or click **Watch → Custom → Releases** on this repo for an email when a new version is out.
+
 ## Build
 
 Requires JDK 17 and the Android SDK (platform 35). Set `sdk.dir` in `local.properties`, then:
