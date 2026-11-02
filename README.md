@@ -79,7 +79,7 @@ Items the static data omits can be named (and given `upgradeSeconds`) in `tools/
 python3 tools/fetch_icons.py
 ```
 
-Items without an icon show a section emoji (🔨 builders, ⚗️ lab, 🐾 pets).
+Items without an icon show a section emoji (🔨 builders, ⚗️ lab, 🐾 pets). `potion_builder.webp`, shown with the time left on an active Builder Potion, is ClashKing's `magic_items/builder_potion.webp`.
 
 ## Behaviour notes
 

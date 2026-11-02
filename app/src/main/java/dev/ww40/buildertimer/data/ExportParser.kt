@@ -32,6 +32,7 @@ class ExportParser(private val gameData: GameData) {
                 .sortedBy { it.finishesAtEpochSec },
             labUpgrades = upgrades(root, LAB_SECTIONS, exportedAt).sortedBy { it.finishesAtEpochSec },
             petUpgrades = upgrades(root, PET_SECTIONS, exportedAt).sortedBy { it.finishesAtEpochSec },
+            builderBoostEndsAtEpochSec = (exportedAt + builderBoost).takeIf { builderBoost > 0 },
         )
     }
 

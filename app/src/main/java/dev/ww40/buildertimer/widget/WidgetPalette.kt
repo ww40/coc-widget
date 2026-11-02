@@ -19,4 +19,5 @@ object WidgetPalette {
     val doneFill = ColorProvider(Color(0xFFD9A520))
     val doneText = ColorProvider(Color(0xFF3A2A1C))
     val stale = ColorProvider(Color(0xFFFFA726))
+    val boost = ColorProvider(Color(0xFFB39DFF))
 }

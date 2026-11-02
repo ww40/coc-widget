@@ -135,6 +135,10 @@ class ExportParserTest {
         assertEquals(3_605L, finishes["Barbarian King"])
         assertEquals(100_000L - 36_000 + 3_600, finishes["Mortar"])
         assertEquals(30_100L, parsed.labUpgrades.single().finishesAtEpochSec)
+
+        assertEquals(3_700L, parsed.builderBoostEndsAtEpochSec)
+        assertEquals(3_600L, parsed.builderBoostRemaining(100))
+        assertEquals(0L, parsed.builderBoostRemaining(5_000))
     }
 
     @Test
@@ -144,6 +148,8 @@ class ExportParserTest {
                 """"buildings":[{"data":1000019,"lvl":16,"timer":30000}]}""",
         )
         assertEquals(30_100L, parsed.builderUpgrades.single().finishesAtEpochSec)
+        assertNull(parsed.builderBoostEndsAtEpochSec)
+        assertEquals(0L, parsed.builderBoostRemaining(100))
     }
 
     @Test

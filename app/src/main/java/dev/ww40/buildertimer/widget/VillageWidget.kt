@@ -8,6 +8,8 @@ import androidx.compose.ui.unit.sp
 import androidx.datastore.preferences.core.Preferences
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
+import androidx.glance.Image
+import androidx.glance.ImageProvider
 import androidx.glance.LocalContext
 import androidx.glance.LocalSize
 import androidx.glance.action.actionStartActivity
@@ -23,6 +25,7 @@ import androidx.glance.currentState
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.Column
+import androidx.glance.layout.ContentScale
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxHeight
@@ -30,6 +33,7 @@ import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
+import androidx.glance.layout.size
 import androidx.glance.layout.width
 import androidx.glance.state.PreferencesGlanceStateDefinition
 import androidx.glance.text.FontWeight
@@ -37,12 +41,14 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import dev.ww40.buildertimer.MainActivity
+import dev.ww40.buildertimer.R
 import dev.ww40.buildertimer.data.Settings
 import dev.ww40.buildertimer.data.SettingsStore
 import dev.ww40.buildertimer.data.SnapshotStore
 import dev.ww40.buildertimer.data.Upgrade
 import dev.ww40.buildertimer.data.VillageSnapshot
 import dev.ww40.buildertimer.data.formatAgo
+import dev.ww40.buildertimer.data.formatRemaining
 import dev.ww40.buildertimer.sync.SyncActivity
 
 private val OUTER_PADDING = 12.dp
@@ -50,6 +56,7 @@ private val ROW_HEIGHT = 28.dp
 private val ROW_GAP = 4.dp
 private val ROW_CORNER = 8.dp
 private val ICON_SIZE = 22.dp
+private val POTION_ICON_SIZE = 16.dp
 
 class VillageWidget : GlanceAppWidget() {
     override val sizeMode = SizeMode.Exact
@@ -94,7 +101,7 @@ private fun WidgetContent() {
         }
         val now = rows.nowEpochSec
         LazyColumn(modifier = GlanceModifier.defaultWeight()) {
-            item { SectionTitle(buildersTitle(snapshot, now)) }
+            item { SectionTitle(buildersTitle(snapshot, now), boostRemainingSeconds = snapshot.builderBoostRemaining(now)) }
             items(snapshot.builderUpgrades) { UpgradeRow(it, Section.BUILDERS, rows) }
             item { SectionTitle(if (snapshot.labUpgrades.all { it.isDone(now) }) "LAB · idle" else "LAB") }
             items(snapshot.labUpgrades) { UpgradeRow(it, Section.LAB, rows) }
@@ -144,13 +151,26 @@ private fun Header(title: String) {
     }
 }
 
+/** Section heading, followed by the potion icon and time left while a boost is active. */
 @Composable
-private fun SectionTitle(text: String) {
-    Text(
-        text,
+private fun SectionTitle(text: String, boostRemainingSeconds: Long = 0) {
+    val style = TextStyle(color = WidgetPalette.sectionTitle, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+    Row(
         modifier = GlanceModifier.padding(top = 6.dp, bottom = 4.dp),
-        style = TextStyle(color = WidgetPalette.sectionTitle, fontSize = 13.sp, fontWeight = FontWeight.Bold),
-    )
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(text, style = style)
+        if (boostRemainingSeconds <= 0) return@Row
+        Spacer(GlanceModifier.width(8.dp))
+        Image(
+            provider = ImageProvider(R.drawable.potion_builder),
+            contentDescription = "Builder Potion",
+            modifier = GlanceModifier.size(POTION_ICON_SIZE),
+            contentScale = ContentScale.Fit,
+        )
+        Spacer(GlanceModifier.width(2.dp))
+        Text(formatRemaining(boostRemainingSeconds), style = style.copy(color = WidgetPalette.boost))
+    }
 }
 
 @Composable
