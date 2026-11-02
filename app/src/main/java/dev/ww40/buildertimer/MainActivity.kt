@@ -40,7 +40,8 @@ class MainActivity : Activity() {
     }
 
     private fun showSettings() {
-        val hours = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, HOUR_LABELS)
+        val hours = ArrayAdapter(this, android.R.layout.simple_spinner_item, HOUR_LABELS)
+        hours.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         quietStart.adapter = hours
         quietEnd.adapter = hours
         val settings = store.load()
