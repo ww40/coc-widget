@@ -14,4 +14,5 @@
     <string name="player_name_hint">Leave blank to show your player tag</string>
     <string name="save">Save</string>
     <string name="player_name_saved">Player name saved</string>
+    <string name="credits">Item icons from ClashKing (assets.clashk.ing).\n\nThis material is unofficial and is not endorsed by Supercell. For more information see Supercell\'s Fan Content Policy: www.supercell.com/fan-content-policy.</string>
 </resources>

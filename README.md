@@ -26,6 +26,18 @@ python3 tools/generate_game_data.py /tmp/cocpy/ext/coc/static/static_data.json
 
 Items coc.py omits (e.g. troops still flagged unreleased when its data was generated) can be named in `tools/game_data_overrides.json`, which the generator merges in. Anything else missing shows as `Unknown (<id>)` with an empty progress bar.
 
+## Icons
+
+`app/src/main/res/drawable-nodpi/icon_<dataId>.webp` are item icons from [ClashKing's assets](https://github.com/ClashKingInc/ClashKingAssets) (served at assets.clashk.ing), which ask for credit when used. Refresh them after regenerating game data:
+
+```bash
+python3 tools/fetch_icons.py
+```
+
+Items without an icon show a section emoji (🔨 builders, ⚗️ lab, 🐾 pets).
+
+This project is unofficial and not endorsed by Supercell; see Supercell's [Fan Content Policy](https://supercell.com/fan-content-policy).
+
 ## Behaviour notes
 
 - Countdowns are minute-precision; the widget refreshes every minute while the device is awake.

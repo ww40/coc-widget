@@ -48,5 +48,13 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="@string/save" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="40dp"
+            android:alpha="0.6"
+            android:text="@string/credits"
+            android:textSize="12sp" />
     </LinearLayout>
 </ScrollView>
