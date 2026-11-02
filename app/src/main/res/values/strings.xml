@@ -22,5 +22,5 @@
     <string name="quiet_to">to</string>
     <string name="quiet_hours_hint">Upgrades finishing in this window notify when it ends instead.</string>
     <string name="settings_saved">Settings saved</string>
-    <string name="credits">Item icons from ClashKing (assets.clashk.ing).\n\nThis material is unofficial and is not endorsed by Supercell. For more information see Supercell\'s Fan Content Policy: www.supercell.com/fan-content-policy.</string>
+    <string name="credits">Item icons and game data from ClashKing (assets.clashk.ing).\n\nThis material is unofficial and is not endorsed by Supercell. For more information see Supercell\'s Fan Content Policy: www.supercell.com/fan-content-policy.</string>
 </resources>

@@ -63,14 +63,13 @@ Android only installs updates signed with the same key, so back the keystore and
 
 ## Game data
 
-`app/src/main/assets/game_data.json` maps export IDs to names and per-level upgrade durations, which drive the progress bars. It's generated from the static data bundled in the [coc.py](https://pypi.org/project/coc.py/) package:
+`app/src/main/assets/game_data.json` maps export IDs to names and per-level upgrade durations, which drive the progress bars. It's generated from [ClashKing's static data](https://github.com/ClashKingInc/ClashKingAssets) (served at assets.clashk.ing/static_data). Regenerate it after a game update:
 
 ```bash
-pip download --no-deps coc.py -d /tmp/cocpy && unzip -o /tmp/cocpy/coc_py-*.whl -d /tmp/cocpy/ext
-python3 tools/generate_game_data.py /tmp/cocpy/ext/coc/static/static_data.json
+python3 tools/generate_game_data.py
 ```
 
-Items coc.py omits (e.g. troops still flagged unreleased when its data was generated) can be named in `tools/game_data_overrides.json`, which the generator merges in. Anything else missing shows as `Unknown (<id>)` with an empty progress bar.
+Items the static data omits can be named (and given `upgradeSeconds`) in `tools/game_data_overrides.json`, which the generator merges in. Anything else missing shows as `Unknown (<id>)` with an empty progress bar.
 
 ## Icons
 
@@ -90,6 +89,6 @@ Items without an icon show a section emoji (🔨 builders, ⚗️ lab, 🐾 pets
 
 ## Credits and licence
 
-Code is MIT licensed (see [LICENSE](LICENSE)). Item icons by ClashKing.
+Code is MIT licensed (see [LICENSE](LICENSE)). Item icons and game data by ClashKing.
 
 This material is unofficial and is not endorsed by Supercell. For more information see Supercell's [Fan Content Policy](https://supercell.com/fan-content-policy).

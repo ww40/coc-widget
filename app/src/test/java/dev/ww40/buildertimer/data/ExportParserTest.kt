@@ -75,21 +75,24 @@ class ExportParserTest {
     }
 
     @Test
-    fun `names troops missing from coc_py via the overrides file`() {
+    fun `marks the lab upgrade the lab assistant is assigned to`() {
         val lab = snapshot.labUpgrades.single()
         assertEquals("Ruin Witch", lab.name)
         assertEquals(2, lab.targetLevel)
-        assertNull(lab.totalSeconds)
-        assertNull(lab.progress(EXPORTED_AT))
+        assertEquals(950_400L, lab.totalSeconds)
         assertEquals(lab, snapshot.labAssistantTarget)
     }
 
     @Test
-    fun `names heroes missing from coc_py via the overrides file`() {
-        val parsed = parser.parse("""{"tag":"#A","timestamp":100,"heroes":[{"data":28000007,"lvl":15,"timer":60}]}""")
-        val hero = parsed.builderUpgrades.single()
-        assertEquals("Dragon Duke", hero.name)
-        assertEquals(16, hero.targetLevel)
+    fun `has durations for recent heroes and TH18 levels`() {
+        val parsed = parser.parse(
+            """{"tag":"#A","timestamp":100,"heroes":[{"data":28000007,"lvl":22,"timer":60}],""" +
+                """"buildings":[{"data":1000019,"lvl":16,"timer":60}]}""",
+        )
+        val duke = parsed.builderUpgrades.single { it.name == "Dragon Duke" }
+        assertEquals(23, duke.targetLevel)
+        assertEquals(691_200L, duke.totalSeconds)
+        assertEquals(1_123_200L, parsed.builderUpgrades.single { it.name == "Hidden Tesla" }.totalSeconds)
     }
 
     @Test
