@@ -12,8 +12,11 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
+import dev.ww40.buildertimer.ClashApp
+import dev.ww40.buildertimer.data.SettingsStore
 import dev.ww40.buildertimer.data.SnapshotStore
 import dev.ww40.buildertimer.data.VillageSnapshot
+import java.time.ZoneId
 
 /**
  * One alarm per upgrade, keyed by its index in [VillageSnapshot.allUpgrades].
@@ -23,15 +26,24 @@ object UpgradeAlarms {
     const val EXTRA_TITLE = "title"
     private const val TAG = "UpgradeAlarms"
 
+    /** Re-arms every alarm (same request codes replace the old ones); call after settings change. */
+    fun rescheduleSaved(context: Context) {
+        SnapshotStore(context).load()?.let { schedule(context, it) }
+    }
+
     fun schedule(context: Context, snapshot: VillageSnapshot) {
         val alarmManager = context.getSystemService(AlarmManager::class.java)
         val nowEpochSec = System.currentTimeMillis() / 1000
+        val quietHours = SettingsStore(context).load().quietHours
+        val zone = ZoneId.systemDefault()
         snapshot.allUpgrades.forEachIndexed { index, upgrade ->
             if (upgrade.finishesAtEpochSec <= nowEpochSec) return@forEachIndexed
+            val deliverAtEpochSec = quietHours?.deliveryEpochSec(upgrade.finishesAtEpochSec, zone)
+                ?: upgrade.finishesAtEpochSec
             val intent = alarmIntent(context).putExtra(EXTRA_TITLE, "${upgrade.name} → ${upgrade.targetLevel} finished")
             alarmManager.setAndAllowWhileIdle(
                 AlarmManager.RTC_WAKEUP,
-                upgrade.finishesAtEpochSec * 1000,
+                deliverAtEpochSec * 1000,
                 PendingIntent.getBroadcast(
                     context, index, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
                 ),
@@ -72,8 +84,10 @@ class UpgradeFinishedReceiver : BroadcastReceiver() {
             .setContentTitle(intent.getStringExtra(UpgradeAlarms.EXTRA_TITLE) ?: "Upgrade finished")
             .setContentText("Open Clash of Clans to start the next one.")
             .setAutoCancel(true)
-            .build()
-        manager.notify(System.currentTimeMillis().toInt(), notification)
+        ClashApp.launchIntent(context)?.let { launchClash ->
+            notification.setContentIntent(PendingIntent.getActivity(context, 0, launchClash, PendingIntent.FLAG_IMMUTABLE))
+        }
+        manager.notify(System.currentTimeMillis().toInt(), notification.build())
     }
 
     private companion object {
@@ -86,6 +100,6 @@ class UpgradeFinishedReceiver : BroadcastReceiver() {
 class RescheduleReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != Intent.ACTION_BOOT_COMPLETED && intent.action != Intent.ACTION_MY_PACKAGE_REPLACED) return
-        SnapshotStore(context).load()?.let { UpgradeAlarms.schedule(context, it) }
+        UpgradeAlarms.rescheduleSaved(context)
     }
 }

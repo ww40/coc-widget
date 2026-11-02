@@ -2,7 +2,9 @@ package dev.ww40.buildertimer.widget
 
 import android.app.AlarmManager
 import android.app.PendingIntent
+import android.appwidget.AppWidgetManager
 import android.content.BroadcastReceiver
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.SystemClock
@@ -22,9 +24,12 @@ object WidgetRefresher {
 
     /** Bumps each widget's state so its composition re-reads the snapshot and clock. */
     suspend fun refreshAll(context: Context) {
-        GlanceAppWidgetManager(context).getGlanceIds(VillageWidget::class.java).forEach { id ->
-            updateAppWidgetState(context, id) { it[REFRESHED_AT_KEY] = System.currentTimeMillis() }
-            VillageWidget().update(context, id)
+        val manager = GlanceAppWidgetManager(context)
+        for (widget in listOf(VillageWidget(), CompactWidget())) {
+            manager.getGlanceIds(widget.javaClass).forEach { id ->
+                updateAppWidgetState(context, id) { it[REFRESHED_AT_KEY] = System.currentTimeMillis() }
+                widget.update(context, id)
+            }
         }
     }
 
@@ -38,7 +43,13 @@ object WidgetRefresher {
         )
     }
 
-    fun stopMinuteTicks(context: Context) {
+    /** Each widget type disables independently, so only stop once neither has instances left. */
+    fun stopMinuteTicksIfUnused(context: Context) {
+        val manager = AppWidgetManager.getInstance(context)
+        val stillPlaced = listOf(VillageWidgetReceiver::class.java, CompactWidgetReceiver::class.java).any {
+            manager.getAppWidgetIds(ComponentName(context, it)).isNotEmpty()
+        }
+        if (stillPlaced) return
         context.getSystemService(AlarmManager::class.java).cancel(tickIntent(context))
     }
 

@@ -2,6 +2,8 @@
 <resources>
     <string name="app_name">Builder Timer Widget</string>
     <string name="widget_description">Builder, lab and pet upgrade timers</string>
+    <string name="compact_widget_label">Next upgrade</string>
+    <string name="compact_widget_description">Next upgrade to finish and free builders</string>
     <string name="setup_instructions">1. Add the Builder Timer widget to your home screen.\n\n2. In Clash of Clans: Settings → More Settings → Data Export → Copy.\n\n3. Tap Sync on the widget (or the button below).\n\nRe-sync whenever you start new upgrades. You\'ll get a notification as each one finishes.</string>
     <string name="sync_from_clipboard">Sync from clipboard</string>
     <string name="sync_error_title">No village data found</string>
@@ -13,6 +15,12 @@
     <string name="player_name_label">Player name (shown on the widget)</string>
     <string name="player_name_hint">Leave blank to show your player tag</string>
     <string name="save">Save</string>
-    <string name="player_name_saved">Player name saved</string>
+    <string name="settings_title">Settings</string>
+    <string name="show_finish_time">Show finish time instead of countdown</string>
+    <string name="quiet_hours">Quiet hours</string>
+    <string name="quiet_from">From</string>
+    <string name="quiet_to">to</string>
+    <string name="quiet_hours_hint">Upgrades finishing in this window notify when it ends instead.</string>
+    <string name="settings_saved">Settings saved</string>
     <string name="credits">Item icons from ClashKing (assets.clashk.ing).\n\nThis material is unofficial and is not endorsed by Supercell. For more information see Supercell\'s Fan Content Policy: www.supercell.com/fan-content-policy.</string>
 </resources>

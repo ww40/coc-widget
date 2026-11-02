@@ -15,4 +15,7 @@ object WidgetPalette {
     val barFill = ColorProvider(Color(0xFF6DB33F))
     val rowText = ColorProvider(Color(0xFFFFFFFF))
     val goblinBadge = ColorProvider(Color(0xFF2E7D32))
+    val doneFill = ColorProvider(Color(0xFFD9A520))
+    val doneText = ColorProvider(Color(0xFF3A2A1C))
+    val stale = ColorProvider(Color(0xFFFFA726))
 }

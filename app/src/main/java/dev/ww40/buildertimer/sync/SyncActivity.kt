@@ -5,6 +5,7 @@ import android.app.AlertDialog
 import android.content.ClipboardManager
 import android.util.Log
 import android.widget.Toast
+import dev.ww40.buildertimer.ClashApp
 import dev.ww40.buildertimer.R
 import dev.ww40.buildertimer.data.ExportFormatException
 import dev.ww40.buildertimer.data.ExportParser
@@ -87,7 +88,7 @@ class SyncActivity : Activity() {
     private fun clashDialog(): AlertDialog.Builder {
         val dialog = AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
             .setOnDismissListener { finish() }
-        packageManager.getLaunchIntentForPackage(CLASH_PACKAGE)?.let { launchClash ->
+        ClashApp.launchIntent(this)?.let { launchClash ->
             dialog.setNeutralButton(R.string.open_clash) { _, _ -> startActivity(launchClash) }
         }
         return dialog
@@ -103,6 +104,5 @@ class SyncActivity : Activity() {
 
     private companion object {
         const val TAG = "SyncActivity"
-        const val CLASH_PACKAGE = "com.supercell.clashofclans"
     }
 }

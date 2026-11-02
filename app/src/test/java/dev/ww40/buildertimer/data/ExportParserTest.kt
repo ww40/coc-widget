@@ -48,7 +48,7 @@ class ExportParserTest {
     @Test
     fun `counts builder huts plus BOB`() {
         assertEquals(6, snapshot.builderCount)
-        assertEquals(6, snapshot.busyBuilders)
+        assertEquals(6, snapshot.busyBuilders(EXPORTED_AT))
     }
 
     @Test
@@ -107,7 +107,7 @@ class ExportParserTest {
         assertNull(minimal.townHallLevel)
         assertTrue(minimal.allUpgrades.isEmpty())
         assertEquals(0, minimal.builderCount)
-        assertFalse(minimal.hasGoblin)
+        assertFalse(minimal.hasActiveGoblin(100))
         assertNull(minimal.apprenticeTarget)
     }
 

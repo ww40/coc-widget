@@ -5,8 +5,8 @@ import android.content.Context
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 
-class VillageWidgetReceiver : GlanceAppWidgetReceiver() {
-    override val glanceAppWidget: GlanceAppWidget = VillageWidget()
+/** Keeps the shared minute tick running while either widget is on the home screen. */
+abstract class TickingWidgetReceiver : GlanceAppWidgetReceiver() {
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
         super.onUpdate(context, appWidgetManager, appWidgetIds)
@@ -16,6 +16,10 @@ class VillageWidgetReceiver : GlanceAppWidgetReceiver() {
 
     override fun onDisabled(context: Context) {
         super.onDisabled(context)
-        WidgetRefresher.stopMinuteTicks(context)
+        WidgetRefresher.stopMinuteTicksIfUnused(context)
     }
+}
+
+class VillageWidgetReceiver : TickingWidgetReceiver() {
+    override val glanceAppWidget: GlanceAppWidget = VillageWidget()
 }

@@ -2,6 +2,9 @@ package dev.ww40.buildertimer.data
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.util.Locale
 
 class TimeFormatTest {
 
@@ -23,5 +26,20 @@ class TimeFormatTest {
         assertEquals("2m ago", formatAgo(150))
         assertEquals("3h ago", formatAgo(3 * 3600 + 10))
         assertEquals("1d ago", formatAgo(86_400))
+    }
+
+    @Test
+    fun `formats finish time relative to today`() {
+        val zone = ZoneId.of("Europe/London")
+        fun epoch(text: String) = LocalDateTime.parse(text).atZone(zone).toEpochSecond()
+        val now = epoch("2026-11-02T10:00:00") // a Monday
+        fun format(text: String, use24Hour: Boolean = true) =
+            formatFinishTime(epoch(text), now, zone, use24Hour, Locale.UK)
+
+        assertEquals("14:30", format("2026-11-02T14:30:00"))
+        assertEquals("Tue 09:05", format("2026-11-03T09:05:00"))
+        assertEquals("Sun 23:00", format("2026-11-08T23:00:00"))
+        assertEquals("9 Nov 08:00", format("2026-11-09T08:00:00"))
+        assertEquals("2:30 pm", format("2026-11-02T14:30:00", use24Hour = false))
     }
 }

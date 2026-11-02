@@ -4,7 +4,8 @@ Usage: python3 tools/fetch_icons.py
 
 Icons come from https://assets.clashk.ing (github.com/ClashKingInc/ClashKingAssets), which asks
 users to credit ClashKing. Names come from app/src/main/assets/game_data.json; each item found
-is saved as icon_<dataId>.webp. Items without a match fall back to a section emoji in the widget.
+is saved as icon_<dataId>.webp, plus icon_<dataId>_<level>.webp per level for buildings and traps.
+Items without a match fall back to a section emoji in the widget.
 """
 
 import json
@@ -45,23 +46,26 @@ def cleaned_name(name: str) -> str:
             .replace("\\q", "").replace("’", ""))
 
 
-def highest_level_path(paths: set[str], prefix: str) -> str | None:
-    levels = [
-        (int(match.group(1)), path)
+def level_paths(paths: set[str], prefix: str) -> dict[int, str]:
+    return {
+        int(match.group(1)): path
         for path in paths
         if path.startswith(prefix) and (match := LEVEL_FILE.search(path))
-    ]
-    return max(levels)[1] if levels else None
+    }
 
 
-def icon_path(data_type: int, name: str, paths: set[str]) -> str | None:
+def icon_files(data_id: str, data_type: int, name: str, paths: set[str]) -> dict[str, str]:
+    """Maps output file names to CDN paths: one per level plus a highest-level fallback, or a single icon."""
     clean = cleaned_name(name)
     if data_type in LEVELLED_PATHS:
-        return highest_level_path(paths, LEVELLED_PATHS[data_type].format(name=clean))
-    if data_type in SINGLE_PATHS:
-        path = SINGLE_PATHS[data_type].format(name=clean)
-        return path if path in paths else None
-    return None
+        levels = level_paths(paths, LEVELLED_PATHS[data_type].format(name=clean))
+        if not levels:
+            return {}
+        files = {f"icon_{data_id}_{level}.webp": path for level, path in levels.items()}
+        files[f"icon_{data_id}.webp"] = levels[max(levels)]
+        return files
+    path = SINGLE_PATHS[data_type].format(name=clean)
+    return {f"icon_{data_id}.webp": path} if path in paths else {}
 
 
 def main() -> None:
@@ -75,20 +79,18 @@ def main() -> None:
         data_type = int(data_id) // 1_000_000
         if data_type not in LEVELLED_PATHS and data_type not in SINGLE_PATHS:
             continue
-        path = icon_path(data_type, entry["name"], paths)
-        if path is None:
+        files = icon_files(data_id, data_type, entry["name"], paths)
+        if not files:
             missing.append(f"{data_id} {entry['name']}")
             continue
-        try:
-            data = fetch(f"{CDN_URL}/{path}")
-        except urllib.error.URLError as error:
-            print(f"Download failed for {data_id} ({path}): {error}", file=sys.stderr)
-            missing.append(f"{data_id} {entry['name']}")
-            continue
-        (OUTPUT_DIR / f"icon_{data_id}.webp").write_bytes(data)
-        saved += 1
+        for file_name, path in files.items():
+            try:
+                (OUTPUT_DIR / file_name).write_bytes(fetch(f"{CDN_URL}/{path}"))
+                saved += 1
+            except urllib.error.URLError as error:
+                print(f"Download failed for {file_name} ({path}): {error}", file=sys.stderr)
 
-    print(f"Saved {saved} icons to {OUTPUT_DIR}")
+    print(f"Saved {saved} icon files to {OUTPUT_DIR}")
     for item in missing:
         print(f"  no icon: {item}")
 
