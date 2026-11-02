@@ -1,0 +1,113 @@
+package dev.ww40.cocwidget.data
+
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
+import java.io.File
+
+class ExportParserTest {
+
+    private lateinit var parser: ExportParser
+    private lateinit var snapshot: VillageSnapshot
+
+    @Before
+    fun setUp() {
+        parser = ExportParser(GameData.fromJson(File(GAME_DATA_PATH).readText()))
+        snapshot = parser.parse(readResource("sample_export.json"))
+    }
+
+    @Test
+    fun `reads header fields`() {
+        assertEquals("#TESTTAG", snapshot.tag)
+        assertEquals(18, snapshot.townHallLevel)
+        assertEquals(EXPORTED_AT, snapshot.exportedAtEpochSec)
+    }
+
+    @Test
+    fun `counts builder huts plus BOB`() {
+        assertEquals(6, snapshot.builderCount)
+        assertEquals(6, snapshot.busyBuilders)
+    }
+
+    @Test
+    fun `lists builder upgrades with goblin first then soonest`() {
+        val builders = snapshot.builderUpgrades
+        assertEquals(7, builders.size)
+        assertTrue(builders.first().isGoblin)
+        assertEquals("Ricochet Cannon", builders.first().name)
+        assertEquals(1, builders.count { it.isGoblin })
+
+        val regular = builders.drop(1)
+        assertEquals(regular.sortedBy { it.finishesAtEpochSec }, regular)
+        assertEquals("Hidden Tesla", regular.first().name)
+        assertEquals(16, regular.first().targetLevel)
+        assertEquals(EXPORTED_AT + 128_365, regular.first().finishesAtEpochSec)
+    }
+
+    @Test
+    fun `marks the item the builder apprentice is assigned to`() {
+        val goldStorage = snapshot.builderUpgrades.single { it.name == "Gold Storage" }
+        assertTrue(goldStorage.hasHelperAssigned)
+        assertEquals(goldStorage, snapshot.apprenticeTarget)
+        assertEquals(19, goldStorage.targetLevel)
+        assertEquals(1_080_000L, goldStorage.totalSeconds)
+    }
+
+    @Test
+    fun `falls back to a placeholder name for IDs newer than the game data`() {
+        val lab = snapshot.labUpgrades.single()
+        assertEquals("Unknown (4000109)", lab.name)
+        assertEquals(2, lab.targetLevel)
+        assertNull(lab.totalSeconds)
+        assertNull(lab.progress(EXPORTED_AT))
+        assertEquals(lab, snapshot.labAssistantTarget)
+    }
+
+    @Test
+    fun `computes pet progress from the full upgrade duration`() {
+        val pet = snapshot.petUpgrades.single()
+        assertEquals("Sneezy", pet.name)
+        assertEquals(10, pet.targetLevel)
+        assertEquals(691_200L, pet.totalSeconds)
+        assertEquals(1f - 197_587f / 691_200f, pet.progress(EXPORTED_AT)!!, 0.0001f)
+        assertEquals(1f, pet.progress(pet.finishesAtEpochSec + 10)!!, 0f)
+    }
+
+    @Test
+    fun `tolerates surrounding whitespace and missing sections`() {
+        val minimal = parser.parse("  {\"tag\":\"#A\",\"timestamp\":100}\n")
+        assertEquals("#A", minimal.tag)
+        assertNull(minimal.townHallLevel)
+        assertTrue(minimal.allUpgrades.isEmpty())
+        assertEquals(0, minimal.builderCount)
+        assertFalse(minimal.hasGoblin)
+        assertNull(minimal.apprenticeTarget)
+    }
+
+    @Test
+    fun `ignores zero timers`() {
+        val parsed = parser.parse("""{"tag":"#A","timestamp":100,"buildings":[{"data":1000005,"lvl":1,"timer":0}]}""")
+        assertTrue(parsed.builderUpgrades.isEmpty())
+    }
+
+    @Test
+    fun `rejects empty, non-JSON and incomplete input`() {
+        assertThrows(ExportFormatException::class.java) { parser.parse("   ") }
+        assertThrows(ExportFormatException::class.java) { parser.parse("hello from the clipboard") }
+        assertThrows(ExportFormatException::class.java) { parser.parse("[1,2,3]") }
+        assertThrows(ExportFormatException::class.java) { parser.parse("""{"tag":"#A"}""") }
+        assertThrows(ExportFormatException::class.java) { parser.parse("""{"timestamp":100}""") }
+    }
+
+    private fun readResource(name: String): String =
+        requireNotNull(javaClass.classLoader?.getResource(name)) { "Missing test resource $name" }.readText()
+
+    private companion object {
+        const val GAME_DATA_PATH = "src/main/assets/game_data.json"
+        const val EXPORTED_AT = 1_793_623_055L
+    }
+}
