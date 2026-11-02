@@ -20,6 +20,18 @@ The official Clash of Clans API doesn't expose upgrade timers, so the app reads 
 
 Re-sync whenever you start or boost upgrades. Tapping anywhere else on a widget opens Clash of Clans.
 
+## Settings
+
+Open settings with the **⚙** button on the widget, by long-pressing a widget and choosing **Settings**, or from the app icon.
+
+<p align="center"><img src="docs/screenshots/settings.png" alt="Settings screen with player name, finish-time toggle and quiet hours" width="600"></p>
+
+- **Player name:** shown in the widget header (the export only contains your player tag).
+- **Show finish time instead of countdown:** e.g. "Tue 14:30" rather than "2d 5h 54m".
+- **Quiet hours:** notifications for upgrades finishing in this window arrive when it ends instead.
+
+Tap **Save** to apply; widgets update within a minute.
+
 ## Build
 
 Requires JDK 17 and the Android SDK (platform 35). Set `sdk.dir` in `local.properties`, then:
