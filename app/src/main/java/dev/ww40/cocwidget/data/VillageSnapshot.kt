@@ -33,6 +33,12 @@ data class VillageSnapshot(
     val apprenticeTarget: Upgrade? get() = builderUpgrades.firstOrNull { it.hasHelperAssigned }
     val labAssistantTarget: Upgrade? get() = labUpgrades.firstOrNull { it.hasHelperAssigned }
 
+    /** Widget header, e.g. "Kuswa  TH18"; falls back to the tag when no name is set. */
+    fun headerTitle(playerName: String?): String {
+        val name = playerName?.trim()?.takeIf { it.isNotEmpty() } ?: tag
+        return listOfNotNull(name, townHallLevel?.let { "TH$it" }).joinToString("  ")
+    }
+
     /** Old exports may predate upgrades started or boosted since, so sync warns before using them. */
     fun isStale(nowEpochSec: Long): Boolean = nowEpochSec - exportedAtEpochSec > STALE_AFTER_SECONDS
 

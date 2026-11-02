@@ -35,6 +35,7 @@ import androidx.glance.state.PreferencesGlanceStateDefinition
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
+import dev.ww40.cocwidget.data.PlayerNameStore
 import dev.ww40.cocwidget.data.SnapshotStore
 import dev.ww40.cocwidget.data.Upgrade
 import dev.ww40.cocwidget.data.VillageSnapshot
@@ -60,7 +61,9 @@ class VillageWidget : GlanceAppWidget() {
 private fun WidgetContent() {
     // Reading state subscribes this composition to WidgetRefresher's ticks.
     currentState<Preferences>()
-    val snapshot = SnapshotStore(LocalContext.current).load()
+    val context = LocalContext.current
+    val snapshot = SnapshotStore(context).load()
+    val playerName = PlayerNameStore(context).load()
     val nowEpochSec = System.currentTimeMillis() / 1000
     val rowWidth = LocalSize.current.width - OUTER_PADDING * 2
 
@@ -68,7 +71,7 @@ private fun WidgetContent() {
         modifier = GlanceModifier.fillMaxSize().cornerRadius(16.dp)
             .background(WidgetPalette.background).padding(OUTER_PADDING),
     ) {
-        Header(snapshot)
+        Header(snapshot?.headerTitle(playerName) ?: playerName ?: "Clash Tracker")
         Spacer(GlanceModifier.height(8.dp))
         if (snapshot == null) {
             Text(
@@ -99,11 +102,10 @@ private fun buildersTitle(snapshot: VillageSnapshot): String {
 }
 
 @Composable
-private fun Header(snapshot: VillageSnapshot?) {
+private fun Header(title: String) {
     Row(modifier = GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        val title = snapshot?.let { s -> listOfNotNull(s.tag, s.townHallLevel?.let { "TH$it" }).joinToString("  ") }
         Text(
-            title ?: "Clash Tracker",
+            title,
             modifier = GlanceModifier.defaultWeight(),
             style = TextStyle(color = WidgetPalette.title, fontSize = 16.sp, fontWeight = FontWeight.Bold),
             maxLines = 1,

@@ -28,6 +28,15 @@ class ExportParserTest {
     }
 
     @Test
+    fun `header uses the player name when set and the tag otherwise`() {
+        assertEquals("Kuswa  TH18", snapshot.headerTitle("Kuswa"))
+        assertEquals("Kuswa  TH18", snapshot.headerTitle("  Kuswa "))
+        assertEquals("#TESTTAG  TH18", snapshot.headerTitle(null))
+        assertEquals("#TESTTAG  TH18", snapshot.headerTitle("   "))
+        assertEquals("#A", parser.parse("""{"tag":"#A","timestamp":100}""").headerTitle(null))
+    }
+
+    @Test
     fun `flags exports older than an hour as stale`() {
         val limit = VillageSnapshot.STALE_AFTER_SECONDS
         assertFalse(snapshot.isStale(EXPORTED_AT))

@@ -10,4 +10,8 @@
     <string name="sync_stale_title">Village data is out of date</string>
     <string name="sync_stale_message">The export on your clipboard was copied %1$s, so any upgrades you\'ve started or boosted since won\'t show.\n\nFor up-to-date timers:\n1. Open Clash of Clans\n2. Go to Settings → More Settings → Data Export → Copy\n3. Come back and press ⟳ Sync on the widget again</string>
     <string name="sync_use_anyway">Use anyway</string>
+    <string name="player_name_label">Player name (shown on the widget)</string>
+    <string name="player_name_hint">Leave blank to show your player tag</string>
+    <string name="save">Save</string>
+    <string name="player_name_saved">Player name saved</string>
 </resources>
