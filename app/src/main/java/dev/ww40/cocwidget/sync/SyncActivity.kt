@@ -1,9 +1,11 @@
 package dev.ww40.cocwidget.sync
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.ClipboardManager
 import android.util.Log
 import android.widget.Toast
+import dev.ww40.cocwidget.R
 import dev.ww40.cocwidget.data.ExportFormatException
 import dev.ww40.cocwidget.data.ExportParser
 import dev.ww40.cocwidget.data.GameData
@@ -25,13 +27,12 @@ class SyncActivity : Activity() {
         super.onWindowFocusChanged(hasFocus)
         if (!hasFocus || handled) return
         handled = true
-        toast(syncFromClipboard())
-        finish()
+        syncFromClipboard()
     }
 
-    private fun syncFromClipboard(): String {
+    private fun syncFromClipboard() {
         val text = readClipboard()
-        return try {
+        try {
             val snapshot = ExportParser(GameData.load(this)).parse(text)
             val store = SnapshotStore(this)
             store.load()?.let { UpgradeAlarms.cancel(this, it) }
@@ -39,14 +40,28 @@ class SyncActivity : Activity() {
             UpgradeAlarms.schedule(this, snapshot)
             val appContext = applicationContext
             WidgetRefresher.scope.launch { WidgetRefresher.refreshAll(appContext) }
-            "Synced ${snapshot.allUpgrades.size} upgrades"
+            toast("Synced ${snapshot.allUpgrades.size} upgrades")
+            finish()
         } catch (e: ExportFormatException) {
             Log.w(TAG, "Clipboard isn't a village export (${text.length} chars)", e)
-            "No village data on clipboard (${e.message}). In Clash: Settings → More Settings → Data Export → Copy"
+            showInvalidExportDialog()
         } catch (e: IOException) {
             Log.e(TAG, "Failed to save village export", e)
-            "Couldn't save village data: ${e.message}"
+            toast("Couldn't save village data: ${e.message}")
+            finish()
         }
+    }
+
+    private fun showInvalidExportDialog() {
+        val dialog = AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+            .setTitle(R.string.sync_error_title)
+            .setMessage(R.string.sync_error_message)
+            .setPositiveButton(android.R.string.ok, null)
+            .setOnDismissListener { finish() }
+        packageManager.getLaunchIntentForPackage(CLASH_PACKAGE)?.let { launchClash ->
+            dialog.setNeutralButton(R.string.open_clash) { _, _ -> startActivity(launchClash) }
+        }
+        dialog.show()
     }
 
     private fun readClipboard(): String {
@@ -59,5 +74,6 @@ class SyncActivity : Activity() {
 
     private companion object {
         const val TAG = "SyncActivity"
+        const val CLASH_PACKAGE = "com.supercell.clashofclans"
     }
 }
