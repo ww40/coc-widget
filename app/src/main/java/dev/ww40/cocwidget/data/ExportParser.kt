@@ -28,7 +28,7 @@ class ExportParser(private val gameData: GameData) {
             exportedAtEpochSec = exportedAt,
             builderCount = builderCount(buildings),
             builderUpgrades = upgrades(root, BUILDER_SECTIONS, exportedAt)
-                .sortedWith(compareByDescending<Upgrade> { it.isGoblin }.thenBy { it.finishesAtEpochSec }),
+                .sortedBy { it.finishesAtEpochSec },
             labUpgrades = upgrades(root, LAB_SECTIONS, exportedAt).sortedBy { it.finishesAtEpochSec },
             petUpgrades = upgrades(root, PET_SECTIONS, exportedAt).sortedBy { it.finishesAtEpochSec },
         )

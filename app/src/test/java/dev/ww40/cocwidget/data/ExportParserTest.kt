@@ -52,18 +52,17 @@ class ExportParserTest {
     }
 
     @Test
-    fun `lists builder upgrades with goblin first then soonest`() {
+    fun `lists builder upgrades soonest first including the goblin`() {
         val builders = snapshot.builderUpgrades
         assertEquals(7, builders.size)
-        assertTrue(builders.first().isGoblin)
-        assertEquals("Ricochet Cannon", builders.first().name)
-        assertEquals(1, builders.count { it.isGoblin })
+        assertEquals(builders.sortedBy { it.finishesAtEpochSec }, builders)
+        assertEquals("Hidden Tesla", builders.first().name)
+        assertEquals(16, builders.first().targetLevel)
+        assertEquals(EXPORTED_AT + 128_365, builders.first().finishesAtEpochSec)
 
-        val regular = builders.drop(1)
-        assertEquals(regular.sortedBy { it.finishesAtEpochSec }, regular)
-        assertEquals("Hidden Tesla", regular.first().name)
-        assertEquals(16, regular.first().targetLevel)
-        assertEquals(EXPORTED_AT + 128_365, regular.first().finishesAtEpochSec)
+        val goblin = builders.single { it.isGoblin }
+        assertEquals("Ricochet Cannon", goblin.name)
+        assertEquals(4, builders.indexOf(goblin))
     }
 
     @Test
