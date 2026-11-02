@@ -8,6 +8,8 @@ import androidx.compose.ui.unit.sp
 import androidx.datastore.preferences.core.Preferences
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
+import androidx.glance.Image
+import androidx.glance.ImageProvider
 import androidx.glance.LocalContext
 import androidx.glance.LocalSize
 import androidx.glance.action.actionStartActivity
@@ -29,11 +31,14 @@ import androidx.glance.layout.fillMaxHeight
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
+import androidx.glance.layout.ContentScale
 import androidx.glance.layout.padding
+import androidx.glance.layout.size
 import androidx.glance.layout.width
 import androidx.glance.state.PreferencesGlanceStateDefinition
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
+import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import dev.ww40.cocwidget.data.PlayerNameStore
 import dev.ww40.cocwidget.data.SnapshotStore
@@ -47,6 +52,11 @@ private val OUTER_PADDING = 12.dp
 private val ROW_HEIGHT = 28.dp
 private val ROW_GAP = 4.dp
 private val ROW_CORNER = 8.dp
+private val ICON_SIZE = 22.dp
+
+private const val BUILDER_FALLBACK_ICON = "🔨"
+private const val LAB_FALLBACK_ICON = "⚗️"
+private const val PET_FALLBACK_ICON = "🐾"
 
 class VillageWidget : GlanceAppWidget() {
     override val sizeMode = SizeMode.Exact
@@ -82,14 +92,14 @@ private fun WidgetContent() {
         }
         LazyColumn(modifier = GlanceModifier.defaultWeight()) {
             item { SectionTitle(buildersTitle(snapshot)) }
-            items(snapshot.builderUpgrades) { UpgradeRow(it, nowEpochSec, rowWidth) }
+            items(snapshot.builderUpgrades) { UpgradeRow(it, BUILDER_FALLBACK_ICON, nowEpochSec, rowWidth) }
             if (snapshot.labUpgrades.isNotEmpty()) {
                 item { SectionTitle("LAB") }
-                items(snapshot.labUpgrades) { UpgradeRow(it, nowEpochSec, rowWidth) }
+                items(snapshot.labUpgrades) { UpgradeRow(it, LAB_FALLBACK_ICON, nowEpochSec, rowWidth) }
             }
             if (snapshot.petUpgrades.isNotEmpty()) {
                 item { SectionTitle("PETS") }
-                items(snapshot.petUpgrades) { UpgradeRow(it, nowEpochSec, rowWidth) }
+                items(snapshot.petUpgrades) { UpgradeRow(it, PET_FALLBACK_ICON, nowEpochSec, rowWidth) }
             }
         }
         Footer(snapshot, nowEpochSec)
@@ -133,7 +143,8 @@ private fun SectionTitle(text: String) {
 }
 
 @Composable
-private fun UpgradeRow(upgrade: Upgrade, nowEpochSec: Long, rowWidth: Dp) {
+private fun UpgradeRow(upgrade: Upgrade, fallbackIcon: String, nowEpochSec: Long, rowWidth: Dp) {
+    val iconRes = ItemIcons.drawableRes(LocalContext.current, upgrade.dataId)
     Column {
         Box(
             modifier = GlanceModifier.fillMaxWidth().height(ROW_HEIGHT).cornerRadius(ROW_CORNER)
@@ -150,6 +161,21 @@ private fun UpgradeRow(upgrade: Upgrade, nowEpochSec: Long, rowWidth: Dp) {
                 modifier = GlanceModifier.fillMaxSize().padding(horizontal = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                if (iconRes != null) {
+                    Image(
+                        provider = ImageProvider(iconRes),
+                        contentDescription = null,
+                        modifier = GlanceModifier.size(ICON_SIZE),
+                        contentScale = ContentScale.Fit,
+                    )
+                } else {
+                    Text(
+                        fallbackIcon,
+                        modifier = GlanceModifier.width(ICON_SIZE),
+                        style = TextStyle(fontSize = 14.sp, textAlign = TextAlign.Center),
+                    )
+                }
+                Spacer(GlanceModifier.width(6.dp))
                 if (upgrade.isGoblin) {
                     Text(
                         "GOBLIN",
