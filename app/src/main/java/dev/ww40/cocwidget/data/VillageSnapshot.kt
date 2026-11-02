@@ -32,4 +32,11 @@ data class VillageSnapshot(
     val hasGoblin: Boolean get() = builderUpgrades.any { it.isGoblin }
     val apprenticeTarget: Upgrade? get() = builderUpgrades.firstOrNull { it.hasHelperAssigned }
     val labAssistantTarget: Upgrade? get() = labUpgrades.firstOrNull { it.hasHelperAssigned }
+
+    /** Old exports may predate upgrades started or boosted since, so sync warns before using them. */
+    fun isStale(nowEpochSec: Long): Boolean = nowEpochSec - exportedAtEpochSec > STALE_AFTER_SECONDS
+
+    companion object {
+        const val STALE_AFTER_SECONDS = 60L * 60
+    }
 }

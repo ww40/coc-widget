@@ -7,4 +7,7 @@
     <string name="sync_error_title">No village data found</string>
     <string name="sync_error_message">Your clipboard doesn\'t contain a Clash of Clans village export.\n\n1. Open Clash of Clans\n2. Go to Settings → More Settings → Data Export → Copy\n3. Come back and press ⟳ Sync on the widget again</string>
     <string name="open_clash">Open Clash of Clans</string>
+    <string name="sync_stale_title">Village data is out of date</string>
+    <string name="sync_stale_message">The export on your clipboard was copied %1$s, so any upgrades you\'ve started or boosted since won\'t show.\n\nFor up-to-date timers:\n1. Open Clash of Clans\n2. Go to Settings → More Settings → Data Export → Copy\n3. Come back and press ⟳ Sync on the widget again</string>
+    <string name="sync_use_anyway">Use anyway</string>
 </resources>

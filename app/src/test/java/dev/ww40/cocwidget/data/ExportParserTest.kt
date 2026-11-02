@@ -28,6 +28,15 @@ class ExportParserTest {
     }
 
     @Test
+    fun `flags exports older than an hour as stale`() {
+        val limit = VillageSnapshot.STALE_AFTER_SECONDS
+        assertFalse(snapshot.isStale(EXPORTED_AT))
+        assertFalse(snapshot.isStale(EXPORTED_AT + limit))
+        assertTrue(snapshot.isStale(EXPORTED_AT + limit + 1))
+        assertFalse(snapshot.isStale(EXPORTED_AT - 30))
+    }
+
+    @Test
     fun `counts builder huts plus BOB`() {
         assertEquals(6, snapshot.builderCount)
         assertEquals(6, snapshot.busyBuilders)

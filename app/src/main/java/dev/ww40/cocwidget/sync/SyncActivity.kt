@@ -10,6 +10,8 @@ import dev.ww40.cocwidget.data.ExportFormatException
 import dev.ww40.cocwidget.data.ExportParser
 import dev.ww40.cocwidget.data.GameData
 import dev.ww40.cocwidget.data.SnapshotStore
+import dev.ww40.cocwidget.data.VillageSnapshot
+import dev.ww40.cocwidget.data.formatAgo
 import dev.ww40.cocwidget.notify.UpgradeAlarms
 import dev.ww40.cocwidget.widget.WidgetRefresher
 import kotlinx.coroutines.launch
@@ -32,8 +34,24 @@ class SyncActivity : Activity() {
 
     private fun syncFromClipboard() {
         val text = readClipboard()
+        val snapshot = try {
+            ExportParser(GameData.load(this)).parse(text)
+        } catch (e: ExportFormatException) {
+            Log.w(TAG, "Clipboard isn't a village export (${text.length} chars)", e)
+            showInvalidExportDialog()
+            return
+        }
+        val nowEpochSec = System.currentTimeMillis() / 1000
+        if (snapshot.isStale(nowEpochSec)) {
+            showStaleExportDialog(text, snapshot, nowEpochSec)
+            return
+        }
+        save(text, snapshot)
+        finish()
+    }
+
+    private fun save(text: String, snapshot: VillageSnapshot) {
         try {
-            val snapshot = ExportParser(GameData.load(this)).parse(text)
             val store = SnapshotStore(this)
             store.load()?.let { UpgradeAlarms.cancel(this, it) }
             store.save(text)
@@ -41,27 +59,38 @@ class SyncActivity : Activity() {
             val appContext = applicationContext
             WidgetRefresher.scope.launch { WidgetRefresher.refreshAll(appContext) }
             toast("Synced ${snapshot.allUpgrades.size} upgrades")
-            finish()
-        } catch (e: ExportFormatException) {
-            Log.w(TAG, "Clipboard isn't a village export (${text.length} chars)", e)
-            showInvalidExportDialog()
         } catch (e: IOException) {
             Log.e(TAG, "Failed to save village export", e)
             toast("Couldn't save village data: ${e.message}")
-            finish()
         }
     }
 
     private fun showInvalidExportDialog() {
-        val dialog = AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+        clashDialog()
             .setTitle(R.string.sync_error_title)
             .setMessage(R.string.sync_error_message)
             .setPositiveButton(android.R.string.ok, null)
+            .show()
+    }
+
+    private fun showStaleExportDialog(text: String, snapshot: VillageSnapshot, nowEpochSec: Long) {
+        val age = formatAgo(nowEpochSec - snapshot.exportedAtEpochSec)
+        clashDialog()
+            .setTitle(R.string.sync_stale_title)
+            .setMessage(getString(R.string.sync_stale_message, age))
+            .setPositiveButton(R.string.sync_use_anyway) { _, _ -> save(text, snapshot) }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    /** Dialog that closes this activity when dismissed and offers to open Clash if it's installed. */
+    private fun clashDialog(): AlertDialog.Builder {
+        val dialog = AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
             .setOnDismissListener { finish() }
         packageManager.getLaunchIntentForPackage(CLASH_PACKAGE)?.let { launchClash ->
             dialog.setNeutralButton(R.string.open_clash) { _, _ -> startActivity(launchClash) }
         }
-        dialog.show()
+        return dialog
     }
 
     private fun readClipboard(): String {
