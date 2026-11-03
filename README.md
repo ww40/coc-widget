@@ -52,7 +52,7 @@ The official Clash of Clans API doesn't expose upgrade timers, so the widget wor
 2. Swipe down from the top of the screen and tap **Sync timers**, or tap **⟳ Sync** on the full widget.
 3. Look for the **Synced N upgrades** message.
 
-<p align="center"><img src="docs/screenshots/sync-tile.png" alt="Quick settings panel with the Sync timers tile, a circular arrow, outlined in gold and the other tiles dimmed" width="360"></p>
+<p align="center"><img src="docs/screenshots/sync-tile-highlighted.png" alt="Quick settings panel with the Sync timers tile, a circular arrow, outlined in gold and the other tiles dimmed" width="360"></p>
 
 With the tile, you stay in the game. It's a circular arrow, and its name may only show once you expand quick settings. The **⟳ Sync** button means going to your home screen first.
 
