@@ -123,6 +123,8 @@ Open settings with the **⚙ Settings** button on the widget, by long-pressing a
 
 Under **Builder Base**:
 
+<p align="center"><img src="docs/screenshots/settings-builder-base.png" alt="Builder Base settings with switches to show Builder Base and Star Lab upgrades and to be notified when they finish" width="600"></p>
+
 - **Show Builder Base and Star Lab:** adds these upgrades to the widgets while any are running, and a Maxed line on the full widget once everything is at its top level.
 - **Notify me when these upgrades finish:** turning this off doesn't hide them from the widgets.
 
