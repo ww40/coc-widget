@@ -24,7 +24,7 @@ Re-sync whenever you start or boost upgrades. Tapping an upgrade row or the foot
 
 Open settings with the **⚙ Settings** button on the widget, by long-pressing a widget and choosing **Settings**, or from the app icon.
 
-<p align="center"><img src="docs/screenshots/settings.png" alt="Settings screen with player name, finish-time toggle and quiet hours" width="600"></p>
+<p align="center"><img src="docs/screenshots/settings.png" alt="Settings screen with player name, finish-time toggle, dark mode switch and quiet hours" width="600"></p>
 
 - **Player name:** shown in the widget header (the export only contains your player tag).
 - **Show finish time instead of countdown:** e.g. "Tue 14:30" rather than "2d 5h 54m".
@@ -33,6 +33,22 @@ Open settings with the **⚙ Settings** button on the widget, by long-pressing a
 - **Quiet hours:** notifications for upgrades finishing in this window arrive when it ends instead.
 
 Tap **Save** to apply; widgets update within a minute. Pressing Back with unsaved changes asks whether to save them or keep the existing settings.
+
+<p align="center"><img src="docs/screenshots/unsaved-changes.png" alt="Popup asking whether to save changes or keep the existing settings" width="360"></p>
+
+### Time to max
+
+Turn on **Show estimated time to max** to add a section under your upgrades on the full widget, with a rough time for each type. Scroll the widget if the section doesn't fit.
+
+<p align="center"><img src="docs/screenshots/widget-time-to-max.png" alt="Widget with an estimated time to max section listing Heroes, Guardians, Buildings, Pets and Lab" width="360"></p>
+
+<p align="center"><img src="docs/screenshots/settings-time-to-max.png" alt="Time to max settings with switches to show the estimate and to use the game's max" width="600"></p>
+
+### Dark mode
+
+Turn on **Dark mode for widgets** to switch both widgets to true black and greys.
+
+<p align="center"><img src="docs/screenshots/widget-dark.png" alt="Full widget in dark mode with a black background and grey buttons" width="360"></p>
 
 ## Updating
 
