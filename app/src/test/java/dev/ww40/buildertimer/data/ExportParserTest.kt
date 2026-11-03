@@ -175,6 +175,26 @@ class ExportParserTest {
     }
 
     @Test
+    fun `speeds up pet timers while a pet potion is active`() {
+        val parsed = parser.parse(
+            """{"tag":"#A","timestamp":100,"boosts":{"pet_boost":3595},""" +
+                """"pets":[{"data":73000000,"lvl":1,"timer":106836},{"data":73000001,"lvl":1,"timer":24005}],""" +
+                """"units":[{"data":4000000,"lvl":1,"timer":30000}],""" +
+                """"buildings":[{"data":1000019,"lvl":16,"timer":30000}]}""",
+        )
+        val finishes = parsed.petUpgrades.associate { it.dataId to it.finishesAtEpochSec - 100 }
+        assertEquals(106_836L - 3_595 * 24 + 3_595, finishes[73000000])
+        assertEquals(1_001L, finishes[73000001])
+        assertEquals(30_100L, parsed.labUpgrades.single().finishesAtEpochSec)
+        assertEquals(30_100L, parsed.builderUpgrades.single().finishesAtEpochSec)
+
+        assertEquals(3_695L, parsed.petBoostEndsAtEpochSec)
+        assertEquals(3_595L, parsed.petBoostRemaining(100))
+        assertEquals(0L, parsed.petBoostRemaining(5_000))
+        assertNull(parsed.labBoostEndsAtEpochSec)
+    }
+
+    @Test
     fun `ignores zero timers`() {
         val parsed = parser.parse("""{"tag":"#A","timestamp":100,"buildings":[{"data":1000005,"lvl":1,"timer":0}]}""")
         assertTrue(parsed.builderUpgrades.isEmpty())

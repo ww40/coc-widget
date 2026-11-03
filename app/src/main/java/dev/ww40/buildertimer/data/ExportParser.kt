@@ -25,6 +25,7 @@ class ExportParser(private val gameData: GameData) {
         val boosts = root["boosts"] as? JsonObject
         val builderBoost = boosts?.long("builder_boost")?.coerceAtLeast(0) ?: 0
         val labBoost = boosts?.long("lab_boost")?.coerceAtLeast(0) ?: 0
+        val petBoost = boosts?.long("pet_boost")?.coerceAtLeast(0) ?: 0
         return VillageSnapshot(
             tag = tag,
             townHallLevel = buildings.firstOrNull { it.int("data") == TOWN_HALL_ID }?.int("lvl"),
@@ -34,9 +35,11 @@ class ExportParser(private val gameData: GameData) {
                 .sortedBy { it.finishesAtEpochSec },
             labUpgrades = upgrades(root, LAB_SECTIONS, exportedAt) { boostedSeconds(it, labBoost, LAB_BOOST_SPEEDUP) }
                 .sortedBy { it.finishesAtEpochSec },
-            petUpgrades = upgrades(root, PET_SECTIONS, exportedAt).sortedBy { it.finishesAtEpochSec },
+            petUpgrades = upgrades(root, PET_SECTIONS, exportedAt) { boostedSeconds(it, petBoost, PET_BOOST_SPEEDUP) }
+                .sortedBy { it.finishesAtEpochSec },
             builderBoostEndsAtEpochSec = (exportedAt + builderBoost).takeIf { builderBoost > 0 },
             labBoostEndsAtEpochSec = (exportedAt + labBoost).takeIf { labBoost > 0 },
+            petBoostEndsAtEpochSec = (exportedAt + petBoost).takeIf { petBoost > 0 },
         )
     }
 
@@ -98,6 +101,7 @@ class ExportParser(private val gameData: GameData) {
         private val BUILDER_HOME_IDS = setOf(BUILDERS_HUT_ID, BOB_HUT_ID)
         const val BUILDER_BOOST_SPEEDUP = 10L
         const val LAB_BOOST_SPEEDUP = 24L
+        const val PET_BOOST_SPEEDUP = 24L
 
         private val BUILDER_SECTIONS = listOf("buildings", "traps", "heroes")
         private val LAB_SECTIONS = listOf("units", "spells", "siege_machines")

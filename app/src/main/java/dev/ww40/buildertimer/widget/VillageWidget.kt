@@ -78,6 +78,7 @@ private enum class Section(val fallbackIcon: String, val freeLabel: String) {
 private enum class Potion(@DrawableRes val icon: Int, val label: String) {
     BUILDER(R.drawable.potion_builder, "Builder Potion"),
     RESEARCH(R.drawable.potion_research, "Research Potion"),
+    PET(R.drawable.potion_pet, "Pet Potion"),
 }
 
 /** Everything a row needs that's the same for every row in one composition. */
@@ -118,7 +119,7 @@ private fun WidgetContent() {
             }
             items(snapshot.labUpgrades) { UpgradeRow(it, Section.LAB, rows) }
             if (snapshot.petUpgrades.isNotEmpty()) {
-                item { SectionTitle("PETS") }
+                item { SectionTitle("PETS", Potion.PET, snapshot.petBoostRemaining(now)) }
                 items(snapshot.petUpgrades) { UpgradeRow(it, Section.PETS, rows) }
             }
         }
