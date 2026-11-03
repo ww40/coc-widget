@@ -12,6 +12,13 @@ data class Settings(
     val showTimeToMax: Boolean = false,
     val maxForWholeGame: Boolean = false,
     val darkMode: Boolean = false,
+    val showBuilderBase: Boolean = true,
+    val showLabOnCompact: Boolean = true,
+    val notifyBuilders: Boolean = true,
+    val notifyLab: Boolean = true,
+    val notifyPets: Boolean = true,
+    val notifyBuilderBase: Boolean = true,
+    val notifyBoostEnded: Boolean = true,
 ) {
     val maxTarget: MaxTarget get() = if (maxForWholeGame) MaxTarget.GAME else MaxTarget.TOWN_HALL
 
@@ -36,6 +43,13 @@ class SettingsStore(context: Context) {
         showTimeToMax = prefs.getBoolean(KEY_SHOW_TIME_TO_MAX, false),
         maxForWholeGame = prefs.getBoolean(KEY_MAX_FOR_WHOLE_GAME, false),
         darkMode = prefs.getBoolean(KEY_DARK_MODE, false),
+        showBuilderBase = prefs.getBoolean(KEY_SHOW_BUILDER_BASE, true),
+        showLabOnCompact = prefs.getBoolean(KEY_SHOW_LAB_ON_COMPACT, true),
+        notifyBuilders = prefs.getBoolean(KEY_NOTIFY_BUILDERS, true),
+        notifyLab = prefs.getBoolean(KEY_NOTIFY_LAB, true),
+        notifyPets = prefs.getBoolean(KEY_NOTIFY_PETS, true),
+        notifyBuilderBase = prefs.getBoolean(KEY_NOTIFY_BUILDER_BASE, true),
+        notifyBoostEnded = prefs.getBoolean(KEY_NOTIFY_BOOST_ENDED, true),
     )
 
     fun save(settings: Settings) {
@@ -48,6 +62,13 @@ class SettingsStore(context: Context) {
             .putBoolean(KEY_SHOW_TIME_TO_MAX, settings.showTimeToMax)
             .putBoolean(KEY_MAX_FOR_WHOLE_GAME, settings.maxForWholeGame)
             .putBoolean(KEY_DARK_MODE, settings.darkMode)
+            .putBoolean(KEY_SHOW_BUILDER_BASE, settings.showBuilderBase)
+            .putBoolean(KEY_SHOW_LAB_ON_COMPACT, settings.showLabOnCompact)
+            .putBoolean(KEY_NOTIFY_BUILDERS, settings.notifyBuilders)
+            .putBoolean(KEY_NOTIFY_LAB, settings.notifyLab)
+            .putBoolean(KEY_NOTIFY_PETS, settings.notifyPets)
+            .putBoolean(KEY_NOTIFY_BUILDER_BASE, settings.notifyBuilderBase)
+            .putBoolean(KEY_NOTIFY_BOOST_ENDED, settings.notifyBoostEnded)
             .apply()
     }
 
@@ -61,5 +82,12 @@ class SettingsStore(context: Context) {
         const val KEY_SHOW_TIME_TO_MAX = "show_time_to_max"
         const val KEY_MAX_FOR_WHOLE_GAME = "max_for_whole_game"
         const val KEY_DARK_MODE = "dark_mode"
+        const val KEY_SHOW_BUILDER_BASE = "show_builder_base"
+        const val KEY_SHOW_LAB_ON_COMPACT = "show_lab_on_compact"
+        const val KEY_NOTIFY_BUILDERS = "notify_builders"
+        const val KEY_NOTIFY_LAB = "notify_lab"
+        const val KEY_NOTIFY_PETS = "notify_pets"
+        const val KEY_NOTIFY_BUILDER_BASE = "notify_builder_base"
+        const val KEY_NOTIFY_BOOST_ENDED = "notify_boost_ended"
     }
 }

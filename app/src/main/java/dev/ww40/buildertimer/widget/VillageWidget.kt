@@ -77,12 +77,15 @@ private enum class Section(val fallbackIcon: String, val freeLabel: String) {
     BUILDERS(BUILDER_FALLBACK_ICON, "Builder free"),
     LAB(LAB_FALLBACK_ICON, "Lab free"),
     PETS(PET_FALLBACK_ICON, "Pet House free"),
+    BUILDER_BASE(BUILDER_FALLBACK_ICON, "Builder free"),
+    STAR_LAB(LAB_FALLBACK_ICON, "Star Lab free"),
 }
 
 private enum class Potion(@DrawableRes val icon: Int, val label: String) {
     BUILDER(R.drawable.potion_builder, "Builder Potion"),
     RESEARCH(R.drawable.potion_research, "Research Potion"),
     PET(R.drawable.potion_pet, "Pet Potion"),
+    CLOCK_TOWER(R.drawable.potion_clock_tower, "Clock Tower boost"),
 }
 
 /** Everything a row needs that's the same for every row in one composition. */
@@ -118,7 +121,7 @@ private fun WidgetContent() {
             items(snapshot.builderUpgrades) { UpgradeRow(it, Section.BUILDERS, rows) }
             item {
                 SectionTitle(
-                    if (snapshot.labUpgrades.all { it.isDone(now) }) "LAB · idle" else "LAB",
+                    if (snapshot.labSecondsUntilFree(now) == 0L) "LAB · idle" else "LAB",
                     Potion.RESEARCH,
                     snapshot.labBoostRemaining(now),
                 )
@@ -128,13 +131,24 @@ private fun WidgetContent() {
                 item { SectionTitle("PETS", Potion.PET, snapshot.petBoostRemaining(now)) }
                 items(snapshot.petUpgrades) { UpgradeRow(it, Section.PETS, rows) }
             }
+            if (settings.showBuilderBase && snapshot.builderBaseUpgrades.isNotEmpty()) {
+                item { SectionTitle("BUILDER BASE", Potion.CLOCK_TOWER, snapshot.clockTowerBoostRemaining(now)) }
+                items(snapshot.builderBaseUpgrades) { UpgradeRow(it, Section.BUILDER_BASE, rows) }
+            }
+            if (settings.showBuilderBase && snapshot.builderBaseMaxed) {
+                item { SectionTitle("BUILDER BASE · ✓ Maxed") }
+            }
+            if (settings.showBuilderBase && snapshot.starLabUpgrades.isNotEmpty()) {
+                item { SectionTitle("STAR LAB", Potion.CLOCK_TOWER, snapshot.clockTowerBoostRemaining(now)) }
+                items(snapshot.starLabUpgrades) { UpgradeRow(it, Section.STAR_LAB, rows) }
+            }
             val estimates = if (settings.showTimeToMax) snapshot.timeToMax[settings.maxTarget].orEmpty() else emptyList()
             if (estimates.isNotEmpty()) {
                 item { TimeToMaxTitle(timeToMaxTitle(snapshot, settings.maxTarget)) }
                 items(estimates) { TimeToMaxRow(it) }
             }
         }
-        Footer(snapshot, now)
+        Footer(snapshot, now, settings)
     }
 }
 
@@ -299,11 +313,11 @@ private fun HelperStatus(name: String, cooldownSeconds: Long, style: TextStyle) 
 }
 
 @Composable
-private fun Footer(snapshot: VillageSnapshot, nowEpochSec: Long) {
+private fun Footer(snapshot: VillageSnapshot, nowEpochSec: Long, settings: Settings) {
     val apprentice = snapshot.apprenticeTarget?.name ?: "idle"
     val assistant = snapshot.labAssistantTarget?.name ?: "idle"
     val style = TextStyle(color = palette.muted, fontSize = 11.sp)
-    val stale = snapshot.isWidgetStale(nowEpochSec)
+    val stale = snapshot.isWidgetStale(nowEpochSec, settings.showBuilderBase)
     val context = LocalContext.current
     val synced = "synced ${formatAgo(nowEpochSec - snapshot.exportedAtEpochSec)}" + if (stale) " · re-sync" else ""
     Row(modifier = GlanceModifier.fillMaxWidth().padding(top = 6.dp).opensClash(context)) {

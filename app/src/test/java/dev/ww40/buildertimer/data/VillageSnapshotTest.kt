@@ -68,6 +68,29 @@ class VillageSnapshotTest {
     }
 
     @Test
+    fun `lab time follows the regular lab, not goblin research`() {
+        val goblinOnly = snapshot.copy(labUpgrades = listOf(upgrade("Dragon", 500, isGoblin = true)))
+        assertEquals(0L, goblinOnly.labSecondsUntilFree(0))
+        val both = goblinOnly.copy(labUpgrades = goblinOnly.labUpgrades + upgrade("Barbarian", 150))
+        assertEquals(100L, both.labSecondsUntilFree(50))
+        assertEquals(0L, both.labSecondsUntilFree(150))
+        assertEquals(0L, snapshot.copy(labUpgrades = emptyList()).labSecondsUntilFree(0))
+    }
+
+    @Test
+    fun `hiding the builder base drops it from the next upgrade and the re-sync reminder`() {
+        val withBase = snapshot.copy(
+            builderUpgrades = listOf(upgrade("Mortar", 300)),
+            labUpgrades = emptyList(),
+            builderBaseUpgrades = listOf(upgrade("Crusher", 50)),
+        )
+        assertEquals("Crusher", withBase.nextUpgrade(0)?.name)
+        assertEquals("Mortar", withBase.nextUpgrade(0, showBuilderBase = false)?.name)
+        assertTrue(withBase.isWidgetStale(60))
+        assertFalse(withBase.isWidgetStale(60, showBuilderBase = false))
+    }
+
+    @Test
     fun `free count never goes negative when the export lists more upgrades than huts`() {
         assertEquals(0, snapshot.copy(builderCount = 1).freeBuilders(0))
     }

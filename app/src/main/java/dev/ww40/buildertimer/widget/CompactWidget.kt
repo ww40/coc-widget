@@ -31,6 +31,7 @@ import androidx.glance.text.TextStyle
 import dev.ww40.buildertimer.data.SettingsStore
 import dev.ww40.buildertimer.data.SnapshotStore
 import dev.ww40.buildertimer.data.VillageSnapshot
+import dev.ww40.buildertimer.data.formatRemaining
 import dev.ww40.buildertimer.sync.SyncActivity
 
 private val COMPACT_ICON_SIZE = 20.dp
@@ -53,6 +54,7 @@ private fun CompactContent() {
     currentState<Preferences>()
     val context = LocalContext.current
     val snapshot = SnapshotStore(context).load()
+    val settings = SettingsStore(context).load()
     val nowEpochSec = System.currentTimeMillis() / 1000
     val titleStyle = TextStyle(color = palette.title, fontSize = 13.sp, fontWeight = FontWeight.Bold)
     val subStyle = TextStyle(color = palette.sectionTitle, fontSize = 11.sp, fontWeight = FontWeight.Bold)
@@ -66,7 +68,7 @@ private fun CompactContent() {
             Text("Tap to sync", style = titleStyle, modifier = GlanceModifier.clickable(actionStartActivity<SyncActivity>()))
             return@Column
         }
-        val next = snapshot.nextUpgrade(nowEpochSec)
+        val next = snapshot.nextUpgrade(nowEpochSec, settings.showBuilderBase)
         Row(modifier = GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             if (next != null) {
                 UpgradeIcon(next, fallbackIconFor(snapshot, next), COMPACT_ICON_SIZE)
@@ -77,16 +79,19 @@ private fun CompactContent() {
                     style = titleStyle,
                     maxLines = 1,
                 )
-                Text(timeLabel(context, next, nowEpochSec, SettingsStore(context).load()), style = titleStyle)
+                Text(timeLabel(context, next, nowEpochSec, settings), style = titleStyle)
             } else {
                 Text("All upgrades finished", modifier = GlanceModifier.defaultWeight(), style = titleStyle)
             }
         }
-        Text(freeSummary(snapshot, nowEpochSec), style = subStyle, maxLines = 1)
+        Text(freeSummary(snapshot, nowEpochSec, settings.showLabOnCompact), style = subStyle, maxLines = 1)
     }
 }
 
-private fun freeSummary(snapshot: VillageSnapshot, nowEpochSec: Long): String {
+private fun freeSummary(snapshot: VillageSnapshot, nowEpochSec: Long, showLab: Boolean): String {
     val free = snapshot.freeBuilders(nowEpochSec)
-    return if (free == 0) "All ${snapshot.builderCount} builders busy" else "$free builder${if (free == 1) "" else "s"} free"
+    val builders = if (free == 0) "All ${snapshot.builderCount} builders busy" else "$free builder${if (free == 1) "" else "s"} free"
+    if (!showLab) return builders
+    val labSeconds = snapshot.labSecondsUntilFree(nowEpochSec)
+    return "$builders · " + if (labSeconds == 0L) "Lab free" else "Lab ${formatRemaining(labSeconds)}"
 }

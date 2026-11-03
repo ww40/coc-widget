@@ -4,7 +4,7 @@ Usage: python3 tools/generate_game_data.py
 
 Data comes from https://assets.clashk.ing/static_data (github.com/ClashKingInc/ClashKingAssets),
 which asks users to credit ClashKing. Output maps each export ID to its name, the seconds
-needed to reach each level and the Town Hall each level requires. Entries in game_data_overrides.json are merged on top, for items
+needed to reach each level, the Town Hall each level requires and the top level. Entries in game_data_overrides.json are merged on top, for items
 the static data omits.
 """
 
@@ -59,6 +59,8 @@ def generate(static_data: dict[str, list[dict[str, Any]]]) -> dict[str, dict[str
             if "upgradeSeconds" in entry:
                 required = required_town_hall_by_level(levels)
                 entry["requiredTownHall"] = {lvl: required[lvl] for lvl in entry["upgradeSeconds"] if lvl in required}
+            if levels:
+                entry["topLevel"] = max(lvl["level"] for lvl in levels)
             game_data[str(item["_id"])] = entry
     return game_data
 

@@ -1,6 +1,5 @@
 package dev.ww40.buildertimer.notify
 
-import android.Manifest
 import android.app.AlarmManager
 import android.app.Notification
 import android.app.NotificationChannel
@@ -9,8 +8,6 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.os.Build
 import android.util.Log
 import dev.ww40.buildertimer.ClashApp
 import dev.ww40.buildertimer.data.SettingsStore
@@ -19,46 +16,44 @@ import dev.ww40.buildertimer.data.VillageSnapshot
 import java.time.ZoneId
 
 /**
- * One alarm per upgrade, keyed by its index in [VillageSnapshot.allUpgrades].
+ * One alarm per planned alert, keyed by its request code.
  * Inexact (setAndAllowWhileIdle) to avoid the exact-alarm permission; may fire a few minutes late in Doze.
  */
 object UpgradeAlarms {
     const val EXTRA_TITLE = "title"
+    const val EXTRA_TEXT = "text"
     private const val TAG = "UpgradeAlarms"
 
-    /** Re-arms every alarm (same request codes replace the old ones); call after settings change. */
+    /** Re-arms alarms from the saved export; call after settings change so switched-off alerts are dropped. */
     fun rescheduleSaved(context: Context) {
-        SnapshotStore(context).load()?.let { schedule(context, it) }
+        val snapshot = SnapshotStore(context).load() ?: return
+        cancel(context, snapshot)
+        schedule(context, snapshot)
     }
 
     fun schedule(context: Context, snapshot: VillageSnapshot) {
         val alarmManager = context.getSystemService(AlarmManager::class.java)
-        val nowEpochSec = System.currentTimeMillis() / 1000
-        val quietHours = SettingsStore(context).load().quietHours
-        val zone = ZoneId.systemDefault()
-        snapshot.allUpgrades.forEachIndexed { index, upgrade ->
-            if (upgrade.finishesAtEpochSec <= nowEpochSec) return@forEachIndexed
-            val deliverAtEpochSec = quietHours?.deliveryEpochSec(upgrade.finishesAtEpochSec, zone)
-                ?: upgrade.finishesAtEpochSec
-            val intent = alarmIntent(context).putExtra(EXTRA_TITLE, "${upgrade.name} → ${upgrade.targetLevel} finished")
+        val alerts = plannedAlerts(snapshot, SettingsStore(context).load(), System.currentTimeMillis() / 1000, ZoneId.systemDefault())
+        alerts.forEach { alert ->
+            val intent = alarmIntent(context).putExtra(EXTRA_TITLE, alert.title).putExtra(EXTRA_TEXT, alert.text)
             alarmManager.setAndAllowWhileIdle(
                 AlarmManager.RTC_WAKEUP,
-                deliverAtEpochSec * 1000,
+                alert.atEpochSec * 1000,
                 PendingIntent.getBroadcast(
-                    context, index, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+                    context, alert.requestCode, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
                 ),
             )
         }
-        Log.i(TAG, "Scheduled alarms for ${snapshot.allUpgrades.size} upgrades")
+        Log.i(TAG, "Scheduled ${alerts.size} alerts")
     }
 
     fun cancel(context: Context, snapshot: VillageSnapshot) {
         val alarmManager = context.getSystemService(AlarmManager::class.java)
-        snapshot.allUpgrades.indices.forEach { index ->
+        alertRequestCodes(snapshot).forEach { requestCode ->
             // PendingIntent matching ignores extras, so a bare intent with the same request code cancels it.
             alarmManager.cancel(
                 PendingIntent.getBroadcast(
-                    context, index, alarmIntent(context), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+                    context, requestCode, alarmIntent(context), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
                 ),
             )
         }
@@ -67,31 +62,48 @@ object UpgradeAlarms {
     private fun alarmIntent(context: Context) = Intent(context, UpgradeFinishedReceiver::class.java)
 }
 
-class UpgradeFinishedReceiver : BroadcastReceiver() {
-    override fun onReceive(context: Context, intent: Intent) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
-        ) {
-            Log.w(TAG, "Notification permission not granted; dropping upgrade-finished alert")
-            return
-        }
+object UpgradeNotifier {
+    private const val CHANNEL_ID = "upgrades"
+    private const val DEFAULT_TEXT = "Open Clash of Clans to start the next one."
+
+    /** False when the permission, the app's notifications or its channel are switched off. */
+    fun canNotify(context: Context): Boolean {
+        val manager = context.getSystemService(NotificationManager::class.java)
+        if (!manager.areNotificationsEnabled()) return false
+        return manager.getNotificationChannel(CHANNEL_ID)?.importance != NotificationManager.IMPORTANCE_NONE
+    }
+
+    fun show(context: Context, title: String, text: String?) {
         val manager = context.getSystemService(NotificationManager::class.java)
         manager.createNotificationChannel(
             NotificationChannel(CHANNEL_ID, "Upgrade finished", NotificationManager.IMPORTANCE_DEFAULT),
         )
         val notification = Notification.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
-            .setContentTitle(intent.getStringExtra(UpgradeAlarms.EXTRA_TITLE) ?: "Upgrade finished")
-            .setContentText("Open Clash of Clans to start the next one.")
+            .setContentTitle(title)
+            .setContentText(text ?: DEFAULT_TEXT)
             .setAutoCancel(true)
         ClashApp.launchIntent(context)?.let { launchClash ->
             notification.setContentIntent(PendingIntent.getActivity(context, 0, launchClash, PendingIntent.FLAG_IMMUTABLE))
         }
         manager.notify(System.currentTimeMillis().toInt(), notification.build())
     }
+}
+
+class UpgradeFinishedReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        if (!UpgradeNotifier.canNotify(context)) {
+            Log.w(TAG, "Notifications are off; dropping alert")
+            return
+        }
+        UpgradeNotifier.show(
+            context,
+            intent.getStringExtra(UpgradeAlarms.EXTRA_TITLE) ?: "Upgrade finished",
+            intent.getStringExtra(UpgradeAlarms.EXTRA_TEXT),
+        )
+    }
 
     private companion object {
-        const val CHANNEL_ID = "upgrades"
         const val TAG = "UpgradeFinished"
     }
 }

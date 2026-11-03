@@ -12,11 +12,15 @@ class GameData(private val entries: Map<Int, Entry>) {
         val name: String,
         val upgradeSeconds: Map<Int, Long> = emptyMap(),
         val requiredTownHall: Map<Int, Int> = emptyMap(),
+        val topLevel: Int? = null,
     )
 
     fun name(dataId: Int): String = entries[dataId]?.name ?: "Unknown ($dataId)"
 
     fun upgradeSeconds(dataId: Int, targetLevel: Int): Long? = entries[dataId]?.upgradeSeconds?.get(targetLevel)
+
+    /** The highest level in the game, or null when the game data lists no levels. */
+    fun topLevel(dataId: Int): Int? = entries[dataId]?.topLevel
 
     /** Durations by target level, limited to levels open at [townHallLimit] when one is given. */
     fun upgradeSecondsByLevel(dataId: Int, townHallLimit: Int? = null): Map<Int, Long> {

@@ -301,6 +301,89 @@ class ExportParserTest {
     }
 
     @Test
+    fun `lists builder base and star lab upgrades separately`() {
+        val parsed = parser.parse(
+            """{"tag":"#A","timestamp":100,""" +
+                """"buildings":[{"data":1000019,"lvl":16,"timer":60}],""" +
+                """"buildings2":[{"data":1000044,"lvl":6,"timer":198177},{"data":1000033,"lvl":3,"cnt":41}],""" +
+                """"traps2":[{"data":12000010,"lvl":3,"timer":113176}],""" +
+                """"heroes2":[{"data":28000003,"lvl":25,"timer":500}],""" +
+                """"units2":[{"data":4000034,"lvl":13,"timer":237783}]}""",
+        )
+        assertEquals(listOf("Battle Machine", "Spring Trap", "Cannon"), parsed.builderBaseUpgrades.map { it.name })
+        assertEquals(7L, parsed.builderBaseUpgrades.last().targetLevel.toLong())
+        assertEquals(345_600L, parsed.builderBaseUpgrades.last().totalSeconds)
+        assertEquals("Boxer Giant", parsed.starLabUpgrades.single().name)
+        assertEquals(237_883L, parsed.starLabUpgrades.single().finishesAtEpochSec)
+        assertEquals(1, parsed.builderUpgrades.size)
+        assertEquals(1, parsed.busyBuilders(100))
+    }
+
+    @Test
+    fun `a clock tower boost speeds up only the builder base and star lab`() {
+        val parsed = parser.parse(
+            """{"tag":"#A","timestamp":100,"boosts":{"clocktower_boost":600,"clocktower_cooldown":5000},""" +
+                """"buildings":[{"data":1000019,"lvl":16,"timer":30000}],""" +
+                """"buildings2":[{"data":1000044,"lvl":6,"timer":30000}],""" +
+                """"units2":[{"data":4000034,"lvl":13,"timer":3000}]}""",
+        )
+        assertEquals(100L + 30_000 - 6_000 + 600, parsed.builderBaseUpgrades.single().finishesAtEpochSec)
+        assertEquals(400L, parsed.starLabUpgrades.single().finishesAtEpochSec)
+        assertEquals(30_100L, parsed.builderUpgrades.single().finishesAtEpochSec)
+        assertEquals(700L, parsed.clockTowerBoostEndsAtEpochSec)
+        assertEquals(600L, parsed.clockTowerBoostRemaining(100))
+    }
+
+    @Test
+    fun `a clock tower cooldown alone is not a boost`() {
+        val parsed = parser.parse(
+            """{"tag":"#A","timestamp":100,"boosts":{"clocktower_cooldown":56562},""" +
+                """"buildings2":[{"data":1000044,"lvl":6,"timer":198177}]}""",
+        )
+        assertNull(parsed.clockTowerBoostEndsAtEpochSec)
+        assertEquals(198_277L, parsed.builderBaseUpgrades.single().finishesAtEpochSec)
+    }
+
+    private fun maxedWith(sections: String) = parser.parse("""{"tag":"#A","timestamp":100,$sections}""").builderBaseMaxed
+
+    @Test
+    fun `builder base is maxed once every item is at the top level`() {
+        assertTrue(maxedWith(""""buildings2":[{"data":1000034,"lvl":10},{"data":1000044,"lvl":10,"cnt":2}],"traps2":[{"data":12000010,"lvl":5}]"""))
+    }
+
+    @Test
+    fun `items without levels do not stop builder base being maxed`() {
+        assertTrue(maxedWith(""""buildings2":[{"data":1000034,"lvl":10},{"data":1000042,"lvl":1,"cnt":6}]"""))
+    }
+
+    @Test
+    fun `builder base walls must be at the top level`() {
+        assertTrue(maxedWith(""""buildings2":[{"data":1000034,"lvl":10},{"data":1000033,"lvl":10,"cnt":180}]"""))
+        assertFalse(maxedWith(""""buildings2":[{"data":1000034,"lvl":10},{"data":1000033,"lvl":9,"cnt":1},{"data":1000033,"lvl":10,"cnt":179}]"""))
+    }
+
+    @Test
+    fun `builder base is not maxed with an item below the top level`() {
+        assertFalse(maxedWith(""""buildings2":[{"data":1000034,"lvl":10},{"data":1000044,"lvl":9}]"""))
+    }
+
+    @Test
+    fun `builder base is not maxed while its last upgrade is running`() {
+        assertFalse(maxedWith(""""buildings2":[{"data":1000044,"lvl":9,"timer":500}]"""))
+        assertFalse(maxedWith(""""buildings2":[{"data":1000033,"lvl":3,"timer":500}]"""))
+    }
+
+    @Test
+    fun `builder base is not maxed while star lab has levels left`() {
+        assertFalse(maxedWith(""""buildings2":[{"data":1000034,"lvl":10}],"units2":[{"data":4000034,"lvl":1}]"""))
+    }
+
+    @Test
+    fun `builder base is not maxed when the export has none`() {
+        assertFalse(maxedWith(""""buildings":[{"data":1000001,"lvl":18}]"""))
+    }
+
+    @Test
     fun `ignores zero timers`() {
         val parsed = parser.parse("""{"tag":"#A","timestamp":100,"buildings":[{"data":1000005,"lvl":1,"timer":0}]}""")
         assertTrue(parsed.builderUpgrades.isEmpty())

@@ -30,7 +30,7 @@ const val LAB_FALLBACK_ICON = "⚗️"
 const val PET_FALLBACK_ICON = "🐾"
 
 fun fallbackIconFor(snapshot: VillageSnapshot, upgrade: Upgrade): String = when (upgrade) {
-    in snapshot.labUpgrades -> LAB_FALLBACK_ICON
+    in snapshot.labUpgrades, in snapshot.starLabUpgrades -> LAB_FALLBACK_ICON
     in snapshot.petUpgrades -> PET_FALLBACK_ICON
     else -> BUILDER_FALLBACK_ICON
 }
