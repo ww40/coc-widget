@@ -34,6 +34,7 @@ data class VillageSnapshot(
     val labBoostEndsAtEpochSec: Long? = null,
     /** When an active Pet Potion runs out, or null when none was active at export. */
     val petBoostEndsAtEpochSec: Long? = null,
+    val timeToMax: Map<MaxTarget, List<MaxEstimate>> = emptyMap(),
 ) {
     val allUpgrades: List<Upgrade> get() = builderUpgrades + labUpgrades + petUpgrades
     val apprenticeTarget: Upgrade? get() = builderUpgrades.firstOrNull { it.hasHelperAssigned }

@@ -2,6 +2,7 @@ package dev.ww40.buildertimer
 
 import android.Manifest
 import android.app.Activity
+import android.app.AlertDialog
 import android.appwidget.AppWidgetManager
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -13,6 +14,7 @@ import android.widget.EditText
 import android.widget.Spinner
 import android.widget.Switch
 import android.widget.Toast
+import dev.ww40.buildertimer.data.Settings
 import dev.ww40.buildertimer.data.SettingsStore
 import dev.ww40.buildertimer.notify.UpgradeAlarms
 import dev.ww40.buildertimer.sync.SyncActivity
@@ -25,6 +27,9 @@ class MainActivity : Activity() {
     private val store by lazy { SettingsStore(this) }
     private val playerName by lazy { findViewById<EditText>(R.id.player_name) }
     private val showFinishTime by lazy { findViewById<Switch>(R.id.show_finish_time) }
+    private val darkMode by lazy { findViewById<Switch>(R.id.dark_mode) }
+    private val showTimeToMax by lazy { findViewById<Switch>(R.id.show_time_to_max) }
+    private val maxForWholeGame by lazy { findViewById<Switch>(R.id.max_for_whole_game) }
     private val quietEnabled by lazy { findViewById<Switch>(R.id.quiet_hours_enabled) }
     private val quietStart by lazy { findViewById<Spinner>(R.id.quiet_start) }
     private val quietEnd by lazy { findViewById<Spinner>(R.id.quiet_end) }
@@ -37,6 +42,7 @@ class MainActivity : Activity() {
             startActivity(Intent(this, SyncActivity::class.java))
         }
         findViewById<Button>(R.id.save_settings_button).setOnClickListener { saveSettings() }
+        showTimeToMax.setOnCheckedChangeListener { _, isChecked -> maxForWholeGame.isEnabled = isChecked }
         showSettings()
         requestNotificationPermission()
     }
@@ -60,21 +66,46 @@ class MainActivity : Activity() {
         val settings = store.load()
         playerName.setText(settings.playerName.orEmpty())
         showFinishTime.isChecked = settings.showFinishTime
+        darkMode.isChecked = settings.darkMode
+        showTimeToMax.isChecked = settings.showTimeToMax
+        maxForWholeGame.isChecked = settings.maxForWholeGame
+        maxForWholeGame.isEnabled = settings.showTimeToMax
         quietEnabled.isChecked = settings.quietHoursEnabled
         quietStart.setSelection(settings.quietStartHour)
         quietEnd.setSelection(settings.quietEndHour)
     }
 
+    private fun enteredSettings(): Settings = store.load().copy(
+        playerName = playerName.text.toString().trim().takeIf { it.isNotEmpty() },
+        showFinishTime = showFinishTime.isChecked,
+        darkMode = darkMode.isChecked,
+        showTimeToMax = showTimeToMax.isChecked,
+        maxForWholeGame = maxForWholeGame.isChecked,
+        quietHoursEnabled = quietEnabled.isChecked,
+        quietStartHour = quietStart.selectedItemPosition,
+        quietEndHour = quietEnd.selectedItemPosition,
+    )
+
+    @Deprecated("Deprecated in Java")
+    override fun onBackPressed() {
+        if (enteredSettings() == store.load()) {
+            @Suppress("DEPRECATION")
+            super.onBackPressed()
+            return
+        }
+        AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+            .setTitle(R.string.unsaved_changes_title)
+            .setMessage(R.string.unsaved_changes_message)
+            .setPositiveButton(R.string.save_changes) { _, _ ->
+                saveSettings()
+                finish()
+            }
+            .setNegativeButton(R.string.keep_existing) { _, _ -> finish() }
+            .show()
+    }
+
     private fun saveSettings() {
-        store.save(
-            store.load().copy(
-                playerName = playerName.text.toString(),
-                showFinishTime = showFinishTime.isChecked,
-                quietHoursEnabled = quietEnabled.isChecked,
-                quietStartHour = quietStart.selectedItemPosition,
-                quietEndHour = quietEnd.selectedItemPosition,
-            ),
-        )
+        store.save(enteredSettings())
         UpgradeAlarms.rescheduleSaved(this)
         val appContext = applicationContext
         WidgetRefresher.scope.launch { WidgetRefresher.refreshAll(appContext) }

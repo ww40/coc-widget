@@ -43,12 +43,15 @@ import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import dev.ww40.buildertimer.MainActivity
 import dev.ww40.buildertimer.R
+import dev.ww40.buildertimer.data.MaxEstimate
+import dev.ww40.buildertimer.data.MaxTarget
 import dev.ww40.buildertimer.data.Settings
 import dev.ww40.buildertimer.data.SettingsStore
 import dev.ww40.buildertimer.data.SnapshotStore
 import dev.ww40.buildertimer.data.Upgrade
 import dev.ww40.buildertimer.data.VillageSnapshot
 import dev.ww40.buildertimer.data.formatAgo
+import dev.ww40.buildertimer.data.formatEstimate
 import dev.ww40.buildertimer.data.formatRemaining
 import dev.ww40.buildertimer.sync.SyncActivity
 
@@ -58,13 +61,14 @@ private val ROW_GAP = 4.dp
 private val ROW_CORNER = 8.dp
 private val ICON_SIZE = 22.dp
 private val POTION_ICON_SIZE = 16.dp
+private val TIME_TO_MAX_TOP_GAP = 22.dp
 
 class VillageWidget : GlanceAppWidget() {
     override val sizeMode = SizeMode.Exact
     override val stateDefinition = PreferencesGlanceStateDefinition
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        provideContent { WidgetContent() }
+        provideContent { ThemedWidget { WidgetContent() } }
     }
 }
 
@@ -93,16 +97,18 @@ private fun WidgetContent() {
     val settings = SettingsStore(context).load()
     val rows = RowContext(System.currentTimeMillis() / 1000, settings, LocalSize.current.width - OUTER_PADDING * 2)
 
+    // Open-Clash goes on the content, not this root, so taps near the header buttons don't launch the game.
     Column(
         modifier = GlanceModifier.fillMaxSize().cornerRadius(16.dp)
-            .background(WidgetPalette.background).padding(OUTER_PADDING).opensClash(context),
+            .background(palette.background).padding(OUTER_PADDING),
     ) {
         Header(snapshot?.headerTitle(settings.playerName) ?: settings.playerName ?: "Builder Timer")
         Spacer(GlanceModifier.height(8.dp))
         if (snapshot == null) {
             Text(
                 "No village data yet. In Clash: Settings → More Settings → Data Export → Copy, then tap Sync.",
-                style = TextStyle(color = WidgetPalette.muted, fontSize = 13.sp),
+                modifier = GlanceModifier.opensClash(context),
+                style = TextStyle(color = palette.muted, fontSize = 13.sp),
             )
             return@Column
         }
@@ -122,6 +128,11 @@ private fun WidgetContent() {
                 item { SectionTitle("PETS", Potion.PET, snapshot.petBoostRemaining(now)) }
                 items(snapshot.petUpgrades) { UpgradeRow(it, Section.PETS, rows) }
             }
+            val estimates = if (settings.showTimeToMax) snapshot.timeToMax[settings.maxTarget].orEmpty() else emptyList()
+            if (estimates.isNotEmpty()) {
+                item { TimeToMaxTitle(timeToMaxTitle(snapshot, settings.maxTarget)) }
+                items(estimates) { TimeToMaxRow(it) }
+            }
         }
         Footer(snapshot, now)
     }
@@ -134,31 +145,39 @@ private fun buildersTitle(snapshot: VillageSnapshot, nowEpochSec: Long): String 
     return "BUILDERS ${snapshot.busyBuilders(nowEpochSec)}/${snapshot.builderCount}$freeText$goblin"
 }
 
+private fun timeToMaxTitle(snapshot: VillageSnapshot, target: MaxTarget): String {
+    val scope = if (target == MaxTarget.GAME) "GAME" else "TH${snapshot.townHallLevel}"
+    return "EST. TIME TO MAX · $scope"
+}
+
 @Composable
 private fun Header(title: String) {
     Row(modifier = GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text(
             title,
             modifier = GlanceModifier.defaultWeight(),
-            style = TextStyle(color = WidgetPalette.title, fontSize = 16.sp, fontWeight = FontWeight.Bold),
+            style = TextStyle(color = palette.title, fontSize = 16.sp, fontWeight = FontWeight.Bold),
             maxLines = 1,
         )
         Box(
-            modifier = GlanceModifier.cornerRadius(12.dp).background(WidgetPalette.settingsButton)
-                .padding(horizontal = 8.dp, vertical = 4.dp)
+            modifier = GlanceModifier.cornerRadius(12.dp).background(palette.settingsButton)
+                .padding(horizontal = 12.dp, vertical = 4.dp)
                 .clickable(actionStartActivity<MainActivity>()),
         ) {
-            Text("⚙", style = TextStyle(color = WidgetPalette.title, fontSize = 14.sp))
+            Text(
+                "⚙ Settings",
+                style = TextStyle(color = palette.title, fontSize = 14.sp, fontWeight = FontWeight.Bold),
+            )
         }
         Spacer(GlanceModifier.width(6.dp))
         Box(
-            modifier = GlanceModifier.cornerRadius(12.dp).background(WidgetPalette.syncButton)
+            modifier = GlanceModifier.cornerRadius(12.dp).background(palette.syncButton)
                 .padding(horizontal = 12.dp, vertical = 4.dp)
                 .clickable(actionStartActivity<SyncActivity>()),
         ) {
             Text(
                 "⟳ Sync",
-                style = TextStyle(color = WidgetPalette.syncButtonText, fontSize = 14.sp, fontWeight = FontWeight.Bold),
+                style = TextStyle(color = palette.syncButtonText, fontSize = 14.sp, fontWeight = FontWeight.Bold),
             )
         }
     }
@@ -167,7 +186,7 @@ private fun Header(title: String) {
 /** Section heading, followed by the potion icon and time left while a boost is active. */
 @Composable
 private fun SectionTitle(text: String, potion: Potion? = null, boostRemainingSeconds: Long = 0) {
-    val style = TextStyle(color = WidgetPalette.sectionTitle, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+    val style = TextStyle(color = palette.sectionTitle, fontSize = 13.sp, fontWeight = FontWeight.Bold)
     Row(
         modifier = GlanceModifier.padding(top = 6.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -182,7 +201,7 @@ private fun SectionTitle(text: String, potion: Potion? = null, boostRemainingSec
             contentScale = ContentScale.Fit,
         )
         Spacer(GlanceModifier.width(2.dp))
-        Text(formatRemaining(boostRemainingSeconds), style = style.copy(color = WidgetPalette.boost))
+        Text(formatRemaining(boostRemainingSeconds), style = style.copy(color = palette.boost))
     }
 }
 
@@ -190,18 +209,18 @@ private fun SectionTitle(text: String, potion: Potion? = null, boostRemainingSec
 private fun UpgradeRow(upgrade: Upgrade, section: Section, rows: RowContext) {
     val context = LocalContext.current
     val done = upgrade.isDone(rows.nowEpochSec)
-    val textColor = if (done) WidgetPalette.doneText else WidgetPalette.rowText
+    val textColor = if (done) palette.doneText else palette.rowText
     // Lazy list items swallow taps, so each row carries its own open-Clash action.
     Column(modifier = GlanceModifier.opensClash(context)) {
         Box(
             modifier = GlanceModifier.fillMaxWidth().height(ROW_HEIGHT).cornerRadius(ROW_CORNER)
-                .background(if (done) WidgetPalette.doneFill else WidgetPalette.barTrack),
+                .background(if (done) palette.doneFill else palette.barTrack),
         ) {
             val progress = upgrade.progress(rows.nowEpochSec)
             if (!done && progress != null && progress > 0f) {
                 Box(
                     modifier = GlanceModifier.width(rows.rowWidth * progress).fillMaxHeight()
-                        .cornerRadius(ROW_CORNER).background(WidgetPalette.barFill),
+                        .cornerRadius(ROW_CORNER).background(palette.barFill),
                 ) {}
             }
             Row(
@@ -230,14 +249,42 @@ private fun UpgradeRow(upgrade: Upgrade, section: Section, rows: RowContext) {
     }
 }
 
+@Composable
+private fun TimeToMaxTitle(text: String) {
+    Text(
+        text,
+        modifier = GlanceModifier.padding(top = TIME_TO_MAX_TOP_GAP, bottom = 4.dp),
+        style = TextStyle(color = palette.title, fontSize = 13.sp, fontWeight = FontWeight.Bold),
+    )
+}
+
+@Composable
+private fun TimeToMaxRow(estimate: MaxEstimate) {
+    val context = LocalContext.current
+    Row(
+        modifier = GlanceModifier.fillMaxWidth().padding(vertical = 2.dp).opensClash(context),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            estimate.category.label,
+            modifier = GlanceModifier.defaultWeight(),
+            style = rowTextStyle(palette.sectionTitle),
+        )
+        Text(
+            if (estimate.isMaxed) "✓ Maxed" else formatEstimate(estimate.seconds),
+            style = rowTextStyle(palette.rowText),
+        )
+    }
+}
+
 private fun rowTextStyle(color: ColorProvider) = TextStyle(color = color, fontSize = 13.sp, fontWeight = FontWeight.Bold)
 
 @Composable
 private fun GoblinBadge() {
     Text(
         "GOBLIN",
-        modifier = GlanceModifier.cornerRadius(4.dp).background(WidgetPalette.goblinBadge).padding(horizontal = 4.dp),
-        style = TextStyle(color = WidgetPalette.rowText, fontSize = 10.sp, fontWeight = FontWeight.Bold),
+        modifier = GlanceModifier.cornerRadius(4.dp).background(palette.goblinBadge).padding(horizontal = 4.dp),
+        style = TextStyle(color = palette.rowText, fontSize = 10.sp, fontWeight = FontWeight.Bold),
     )
 }
 
@@ -245,10 +292,11 @@ private fun GoblinBadge() {
 private fun Footer(snapshot: VillageSnapshot, nowEpochSec: Long) {
     val apprentice = snapshot.apprenticeTarget?.name ?: "idle"
     val assistant = snapshot.labAssistantTarget?.name ?: "idle"
-    val style = TextStyle(color = WidgetPalette.muted, fontSize = 11.sp)
+    val style = TextStyle(color = palette.muted, fontSize = 11.sp)
     val stale = snapshot.isWidgetStale(nowEpochSec)
+    val context = LocalContext.current
     val synced = "synced ${formatAgo(nowEpochSec - snapshot.exportedAtEpochSec)}" + if (stale) " · re-sync" else ""
-    Row(modifier = GlanceModifier.fillMaxWidth().padding(top = 6.dp)) {
+    Row(modifier = GlanceModifier.fillMaxWidth().padding(top = 6.dp).opensClash(context)) {
         Text(
             "Apprentice: $apprentice · Assistant: $assistant",
             modifier = GlanceModifier.defaultWeight(),
@@ -257,7 +305,7 @@ private fun Footer(snapshot: VillageSnapshot, nowEpochSec: Long) {
         )
         Text(
             synced,
-            style = if (stale) style.copy(color = WidgetPalette.stale, fontWeight = FontWeight.Bold) else style,
+            style = if (stale) style.copy(color = palette.stale, fontWeight = FontWeight.Bold) else style,
         )
     }
 }

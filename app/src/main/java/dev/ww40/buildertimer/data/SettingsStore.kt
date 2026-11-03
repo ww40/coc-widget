@@ -9,7 +9,12 @@ data class Settings(
     val quietStartHour: Int = DEFAULT_QUIET_START,
     val quietEndHour: Int = DEFAULT_QUIET_END,
     val showFinishTime: Boolean = false,
+    val showTimeToMax: Boolean = false,
+    val maxForWholeGame: Boolean = false,
+    val darkMode: Boolean = false,
 ) {
+    val maxTarget: MaxTarget get() = if (maxForWholeGame) MaxTarget.GAME else MaxTarget.TOWN_HALL
+
     val quietHours: QuietHours? get() = if (quietHoursEnabled) QuietHours(quietStartHour, quietEndHour) else null
 
     companion object {
@@ -28,6 +33,9 @@ class SettingsStore(context: Context) {
         quietStartHour = prefs.getInt(KEY_QUIET_START, Settings.DEFAULT_QUIET_START),
         quietEndHour = prefs.getInt(KEY_QUIET_END, Settings.DEFAULT_QUIET_END),
         showFinishTime = prefs.getBoolean(KEY_SHOW_FINISH_TIME, false),
+        showTimeToMax = prefs.getBoolean(KEY_SHOW_TIME_TO_MAX, false),
+        maxForWholeGame = prefs.getBoolean(KEY_MAX_FOR_WHOLE_GAME, false),
+        darkMode = prefs.getBoolean(KEY_DARK_MODE, false),
     )
 
     fun save(settings: Settings) {
@@ -37,6 +45,9 @@ class SettingsStore(context: Context) {
             .putInt(KEY_QUIET_START, settings.quietStartHour)
             .putInt(KEY_QUIET_END, settings.quietEndHour)
             .putBoolean(KEY_SHOW_FINISH_TIME, settings.showFinishTime)
+            .putBoolean(KEY_SHOW_TIME_TO_MAX, settings.showTimeToMax)
+            .putBoolean(KEY_MAX_FOR_WHOLE_GAME, settings.maxForWholeGame)
+            .putBoolean(KEY_DARK_MODE, settings.darkMode)
             .apply()
     }
 
@@ -47,5 +58,8 @@ class SettingsStore(context: Context) {
         const val KEY_QUIET_START = "quiet_start_hour"
         const val KEY_QUIET_END = "quiet_end_hour"
         const val KEY_SHOW_FINISH_TIME = "show_finish_time"
+        const val KEY_SHOW_TIME_TO_MAX = "show_time_to_max"
+        const val KEY_MAX_FOR_WHOLE_GAME = "max_for_whole_game"
+        const val KEY_DARK_MODE = "dark_mode"
     }
 }

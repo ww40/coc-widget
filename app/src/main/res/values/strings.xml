@@ -17,10 +17,20 @@
     <string name="save">Save</string>
     <string name="settings_title">Settings</string>
     <string name="show_finish_time">Show finish time instead of countdown</string>
+    <string name="dark_mode">Dark mode for widgets</string>
+    <string name="time_to_max_title">Time to max</string>
+    <string name="time_to_max_description">Adds an estimate of how long is left for your Heroes, Guardians, Buildings, Pets and Lab, below your upgrades on the full widget.</string>
+    <string name="show_time_to_max">Show estimated time to max</string>
+    <string name="max_for_whole_game">Use the game\'s max, not my Town Hall\'s</string>
+    <string name="time_to_max_hint">Heroes, Guardians and Buildings share your builders, so each time assumes your builders work only on that type.\n\nItems you haven\'t built or unlocked aren\'t counted, and speed-ups are ignored.</string>
     <string name="quiet_hours">Quiet hours</string>
     <string name="quiet_from">From</string>
     <string name="quiet_to">to</string>
     <string name="quiet_hours_hint">Upgrades finishing in this window notify when it ends instead.</string>
     <string name="settings_saved">Settings saved</string>
+    <string name="unsaved_changes_title">Save your changes?</string>
+    <string name="unsaved_changes_message">You\'ve changed some settings but haven\'t saved them.</string>
+    <string name="save_changes">Save changes</string>
+    <string name="keep_existing">Keep existing</string>
     <string name="credits">Item icons and game data from ClashKing (assets.clashk.ing).\n\nThis material is unofficial and is not endorsed by Supercell. For more information see Supercell\'s Fan Content Policy: www.supercell.com/fan-content-policy.</string>
 </resources>

@@ -11,6 +11,13 @@ private const val SECONDS_PER_HOUR = 3_600L
 private const val SECONDS_PER_DAY = 86_400L
 
 /** Minute-precision countdown, e.g. "2d 5h 54m", "21h 52m", "8m"; the widget refreshes once a minute. */
+/** Coarse duration for long estimates, e.g. "344d", "5h" or "<1h". */
+fun formatEstimate(seconds: Long): String = when {
+    seconds >= SECONDS_PER_DAY -> "${seconds / SECONDS_PER_DAY}d"
+    seconds >= SECONDS_PER_HOUR -> "${seconds / SECONDS_PER_HOUR}h"
+    else -> "<1h"
+}
+
 fun formatRemaining(seconds: Long): String {
     if (seconds <= 0) return "Done"
     if (seconds < SECONDS_PER_MINUTE) return "<1m"

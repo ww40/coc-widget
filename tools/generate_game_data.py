@@ -3,8 +3,8 @@
 Usage: python3 tools/generate_game_data.py
 
 Data comes from https://assets.clashk.ing/static_data (github.com/ClashKingInc/ClashKingAssets),
-which asks users to credit ClashKing. Output maps each export ID to its name and the seconds
-needed to reach each level. Entries in game_data_overrides.json are merged on top, for items
+which asks users to credit ClashKing. Output maps each export ID to its name, the seconds
+needed to reach each level and the Town Hall each level requires. Entries in game_data_overrides.json are merged on top, for items
 the static data omits.
 """
 
@@ -42,6 +42,10 @@ def upgrade_time_by_target(levels: list[dict[str, Any]]) -> dict[str, int]:
     return {str(lvl["level"] + 1): lvl["upgrade_time"] for lvl in levels if lvl.get("upgrade_time")}
 
 
+def required_town_hall_by_level(levels: list[dict[str, Any]]) -> dict[str, int]:
+    return {str(lvl["level"]): lvl["required_townhall"] for lvl in levels if lvl.get("required_townhall") is not None}
+
+
 def generate(static_data: dict[str, list[dict[str, Any]]]) -> dict[str, dict[str, Any]]:
     game_data: dict[str, dict[str, Any]] = {}
     for category in CATEGORIES:
@@ -52,6 +56,9 @@ def generate(static_data: dict[str, list[dict[str, Any]]]) -> dict[str, dict[str
                 entry["upgradeSeconds"] = build_time_by_target(levels)
             elif category in UPGRADE_TIME_CATEGORIES:
                 entry["upgradeSeconds"] = upgrade_time_by_target(levels)
+            if "upgradeSeconds" in entry:
+                required = required_town_hall_by_level(levels)
+                entry["requiredTownHall"] = {lvl: required[lvl] for lvl in entry["upgradeSeconds"] if lvl in required}
             game_data[str(item["_id"])] = entry
     return game_data
 

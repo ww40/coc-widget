@@ -18,19 +18,21 @@ The official Clash of Clans API doesn't expose upgrade timers, so the app reads 
 1. In Clash of Clans: **Settings → More Settings → Data Export → Copy**.
 2. Tap **⟳ Sync** on the widget. It reads the export from your clipboard.
 
-Re-sync whenever you start or boost upgrades. Tapping anywhere else on a widget opens Clash of Clans.
+Re-sync whenever you start or boost upgrades. Tapping an upgrade row or the footer opens Clash of Clans, as does tapping anywhere else on the compact widget. The full widget's header row doesn't, so a missed tap on **Settings** or **Sync** won't launch the game.
 
 ## Settings
 
-Open settings with the **⚙** button on the widget, by long-pressing a widget and choosing **Settings**, or from the app icon.
+Open settings with the **⚙ Settings** button on the widget, by long-pressing a widget and choosing **Settings**, or from the app icon.
 
 <p align="center"><img src="docs/screenshots/settings.png" alt="Settings screen with player name, finish-time toggle and quiet hours" width="600"></p>
 
 - **Player name:** shown in the widget header (the export only contains your player tag).
 - **Show finish time instead of countdown:** e.g. "Tue 14:30" rather than "2d 5h 54m".
+- **Dark mode for widgets:** swaps the Clash-style colours on both widgets for true black and greys.
+- **Show estimated time to max:** adds a section under the upgrades with a time for Heroes, Guardians, Buildings, Pets and Lab, or **✓ Maxed**. A second switch measures against the game's highest levels instead of your Town Hall's.
 - **Quiet hours:** notifications for upgrades finishing in this window arrive when it ends instead.
 
-Tap **Save** to apply; widgets update within a minute.
+Tap **Save** to apply; widgets update within a minute. Pressing Back with unsaved changes asks whether to save them or keep the existing settings.
 
 ## Updating
 
@@ -86,6 +88,7 @@ Items without an icon show a section emoji (🔨 builders, ⚗️ lab, 🐾 pets
 - Countdowns are minute-precision; widgets refresh every minute while the device is awake.
 - Finish notifications use inexact alarms, so they may arrive a few minutes late under Doze.
 - Active Builder, Research and Pet Potions are included in finish times, so during a potion the widget shows less time than the game.
+- Time to max is a rough estimate from your last sync. Heroes, Guardians and Buildings share your builders, so each time assumes your builders work only on that type, and the times don't add up to an overall total. Items you haven't built or unlocked aren't counted, and speed-ups such as potions, helpers and Gold Pass are ignored.
 - Timers are only as current as the last sync; the widget footer turns amber once the last sync is over a day old.
 
 ## Credits and licence

@@ -26,11 +26,15 @@ class ExportParser(private val gameData: GameData) {
         val builderBoost = boosts?.long("builder_boost")?.coerceAtLeast(0) ?: 0
         val labBoost = boosts?.long("lab_boost")?.coerceAtLeast(0) ?: 0
         val petBoost = boosts?.long("pet_boost")?.coerceAtLeast(0) ?: 0
+        val townHallLevel = buildings.firstOrNull { it.int("data") == TOWN_HALL_ID }?.int("lvl")
+        val builderCount = builderCount(buildings)
+        val maxItems = MAX_SECTIONS.mapValues { (_, sections) -> sections.flatMap { root.entries(it) }.mapNotNull(::maxItem) }
+        val maxCalculator = TimeToMaxCalculator(gameData, builderCount, townHallLevel)
         return VillageSnapshot(
             tag = tag,
-            townHallLevel = buildings.firstOrNull { it.int("data") == TOWN_HALL_ID }?.int("lvl"),
+            townHallLevel = townHallLevel,
             exportedAtEpochSec = exportedAt,
-            builderCount = builderCount(buildings),
+            builderCount = builderCount,
             builderUpgrades = upgrades(root, BUILDER_SECTIONS, exportedAt) { boostedSeconds(it, builderBoost, BUILDER_BOOST_SPEEDUP) }
                 .sortedBy { it.finishesAtEpochSec },
             labUpgrades = upgrades(root, LAB_SECTIONS, exportedAt) { boostedSeconds(it, labBoost, LAB_BOOST_SPEEDUP) }
@@ -40,6 +44,7 @@ class ExportParser(private val gameData: GameData) {
             builderBoostEndsAtEpochSec = (exportedAt + builderBoost).takeIf { builderBoost > 0 },
             labBoostEndsAtEpochSec = (exportedAt + labBoost).takeIf { labBoost > 0 },
             petBoostEndsAtEpochSec = (exportedAt + petBoost).takeIf { petBoost > 0 },
+            timeToMax = MaxTarget.entries.associateWith { maxCalculator.estimates(maxItems, it) },
         )
     }
 
@@ -84,6 +89,12 @@ class ExportParser(private val gameData: GameData) {
         return timer - boostedWork + boostSeconds
     }
 
+    private fun maxItem(entry: JsonObject): MaxItem? {
+        val dataId = entry.int("data") ?: return null
+        val level = entry.int("lvl") ?: return null
+        return MaxItem(dataId, level, entry.long("timer")?.takeIf { it > 0 }, entry.int("cnt") ?: 1)
+    }
+
     private fun builderCount(buildings: List<JsonObject>): Int =
         buildings.filter { it.int("data") in BUILDER_HOME_IDS }.sumOf { it.int("cnt") ?: 1 }
 
@@ -106,5 +117,12 @@ class ExportParser(private val gameData: GameData) {
         private val BUILDER_SECTIONS = listOf("buildings", "traps", "heroes", "guardians")
         private val LAB_SECTIONS = listOf("units", "spells", "siege_machines")
         private val PET_SECTIONS = listOf("pets")
+        private val MAX_SECTIONS = mapOf(
+            MaxCategory.HEROES to listOf("heroes"),
+            MaxCategory.GUARDIANS to listOf("guardians"),
+            MaxCategory.BUILDINGS to listOf("buildings", "traps"),
+            MaxCategory.PETS to PET_SECTIONS,
+            MaxCategory.LAB to LAB_SECTIONS,
+        )
     }
 }

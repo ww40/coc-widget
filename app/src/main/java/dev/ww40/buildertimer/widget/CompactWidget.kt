@@ -40,7 +40,7 @@ class CompactWidget : GlanceAppWidget() {
     override val stateDefinition = PreferencesGlanceStateDefinition
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        provideContent { CompactContent() }
+        provideContent { ThemedWidget { CompactContent() } }
     }
 }
 
@@ -54,11 +54,11 @@ private fun CompactContent() {
     val context = LocalContext.current
     val snapshot = SnapshotStore(context).load()
     val nowEpochSec = System.currentTimeMillis() / 1000
-    val titleStyle = TextStyle(color = WidgetPalette.title, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-    val subStyle = TextStyle(color = WidgetPalette.sectionTitle, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+    val titleStyle = TextStyle(color = palette.title, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+    val subStyle = TextStyle(color = palette.sectionTitle, fontSize = 11.sp, fontWeight = FontWeight.Bold)
 
     Column(
-        modifier = GlanceModifier.fillMaxSize().cornerRadius(12.dp).background(WidgetPalette.background)
+        modifier = GlanceModifier.fillMaxSize().cornerRadius(12.dp).background(palette.background)
             .padding(horizontal = 10.dp, vertical = 6.dp).opensClash(context),
         verticalAlignment = Alignment.CenterVertically,
     ) {

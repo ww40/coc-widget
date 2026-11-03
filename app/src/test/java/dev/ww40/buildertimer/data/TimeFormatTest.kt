@@ -9,6 +9,15 @@ import java.util.Locale
 class TimeFormatTest {
 
     @Test
+    fun `formats estimates coarsely`() {
+        assertEquals("344d", formatEstimate(344 * 86_400L + 7_200))
+        assertEquals("1d", formatEstimate(86_400))
+        assertEquals("23h", formatEstimate(86_399))
+        assertEquals("1h", formatEstimate(3_600))
+        assertEquals("<1h", formatEstimate(3_599))
+    }
+
+    @Test
     fun `formats remaining time at minute precision`() {
         assertEquals("Done", formatRemaining(0))
         assertEquals("Done", formatRemaining(-5))

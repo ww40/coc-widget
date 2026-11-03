@@ -58,6 +58,17 @@
             android:textSize="16sp" />
 
         <Switch
+            android:id="@+id/dark_mode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:switchMinWidth="40dp"
+            android:text="@string/dark_mode"
+            android:textSize="16sp"
+            android:thumb="@drawable/dark_mode_thumb"
+            android:track="@drawable/dark_mode_track" />
+
+        <Switch
             android:id="@+id/quiet_hours_enabled"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -100,6 +111,58 @@
             android:alpha="0.6"
             android:text="@string/quiet_hours_hint"
             android:textSize="13sp" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="24dp"
+            android:background="?android:attr/listDivider" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="@string/time_to_max_title"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:alpha="0.6"
+            android:text="@string/time_to_max_description"
+            android:textSize="14sp" />
+
+        <Switch
+            android:id="@+id/show_time_to_max"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/show_time_to_max"
+            android:textSize="16sp" />
+
+        <Switch
+            android:id="@+id/max_for_whole_game"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/max_for_whole_game"
+            android:textSize="16sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:alpha="0.6"
+            android:text="@string/time_to_max_hint"
+            android:textSize="13sp" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="24dp"
+            android:background="?android:attr/listDivider" />
 
         <Button
             android:id="@+id/save_settings_button"

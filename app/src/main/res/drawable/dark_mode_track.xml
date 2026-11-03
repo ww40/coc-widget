@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Inset because Switch stretches its track to the thumb's height. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_checked="true">
+        <inset android:insetBottom="4dp" android:insetLeft="2dp" android:insetRight="2dp" android:insetTop="4dp">
+            <shape android:shape="rectangle">
+                <size android:height="12dp" />
+                <corners android:radius="6dp" />
+                <solid android:color="#FF55557A" />
+            </shape>
+        </inset>
+    </item>
+    <item>
+        <inset android:insetBottom="4dp" android:insetLeft="2dp" android:insetRight="2dp" android:insetTop="4dp">
+            <shape android:shape="rectangle">
+                <size android:height="12dp" />
+                <corners android:radius="6dp" />
+                <solid android:color="#FF8A8A8A" />
+            </shape>
+        </inset>
+    </item>
+</selector>
