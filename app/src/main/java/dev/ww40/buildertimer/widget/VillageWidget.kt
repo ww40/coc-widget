@@ -288,6 +288,16 @@ private fun GoblinBadge() {
     )
 }
 
+/** Amber once the helper can take a new job. */
+@Composable
+private fun HelperStatus(name: String, cooldownSeconds: Long, style: TextStyle) {
+    if (cooldownSeconds > 0) {
+        Text("$name ready in ${formatRemaining(cooldownSeconds)}", style = style, maxLines = 1)
+    } else {
+        Text("$name ready", style = style.copy(color = palette.stale, fontWeight = FontWeight.Bold), maxLines = 1)
+    }
+}
+
 @Composable
 private fun Footer(snapshot: VillageSnapshot, nowEpochSec: Long) {
     val apprentice = snapshot.apprenticeTarget?.name ?: "idle"
@@ -296,6 +306,14 @@ private fun Footer(snapshot: VillageSnapshot, nowEpochSec: Long) {
     val stale = snapshot.isWidgetStale(nowEpochSec)
     val context = LocalContext.current
     val synced = "synced ${formatAgo(nowEpochSec - snapshot.exportedAtEpochSec)}" + if (stale) " · re-sync" else ""
+    Row(modifier = GlanceModifier.fillMaxWidth().padding(top = 6.dp).opensClash(context)) {
+        val showApprentice = snapshot.apprenticeReadyAtEpochSec != null
+        if (showApprentice) HelperStatus("Apprentice", snapshot.apprenticeCooldownRemaining(nowEpochSec), style)
+        if (snapshot.labAssistantReadyAtEpochSec != null) {
+            if (showApprentice) Text(" · ", style = style)
+            HelperStatus("Assistant", snapshot.labAssistantCooldownRemaining(nowEpochSec), style)
+        }
+    }
     Row(modifier = GlanceModifier.fillMaxWidth().padding(top = 6.dp).opensClash(context)) {
         Text(
             "Apprentice: $apprentice · Assistant: $assistant",

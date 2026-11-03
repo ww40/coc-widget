@@ -34,6 +34,10 @@ data class VillageSnapshot(
     val labBoostEndsAtEpochSec: Long? = null,
     /** When an active Pet Potion runs out, or null when none was active at export. */
     val petBoostEndsAtEpochSec: Long? = null,
+    /** When the Builder's Apprentice can take a new job, or null when the export doesn't list it. */
+    val apprenticeReadyAtEpochSec: Long? = null,
+    /** When the Lab Assistant can take a new job, or null when the export doesn't list it. */
+    val labAssistantReadyAtEpochSec: Long? = null,
     val timeToMax: Map<MaxTarget, List<MaxEstimate>> = emptyMap(),
 ) {
     val allUpgrades: List<Upgrade> get() = builderUpgrades + labUpgrades + petUpgrades
@@ -53,13 +57,17 @@ data class VillageSnapshot(
 
     fun hasActiveGoblin(nowEpochSec: Long): Boolean = builderUpgrades.any { it.isGoblin && !it.isDone(nowEpochSec) }
 
-    fun builderBoostRemaining(nowEpochSec: Long): Long = boostRemaining(builderBoostEndsAtEpochSec, nowEpochSec)
+    fun builderBoostRemaining(nowEpochSec: Long): Long = secondsUntil(builderBoostEndsAtEpochSec, nowEpochSec)
 
-    fun labBoostRemaining(nowEpochSec: Long): Long = boostRemaining(labBoostEndsAtEpochSec, nowEpochSec)
+    fun labBoostRemaining(nowEpochSec: Long): Long = secondsUntil(labBoostEndsAtEpochSec, nowEpochSec)
 
-    fun petBoostRemaining(nowEpochSec: Long): Long = boostRemaining(petBoostEndsAtEpochSec, nowEpochSec)
+    fun petBoostRemaining(nowEpochSec: Long): Long = secondsUntil(petBoostEndsAtEpochSec, nowEpochSec)
 
-    private fun boostRemaining(endsAtEpochSec: Long?, nowEpochSec: Long): Long =
+    fun apprenticeCooldownRemaining(nowEpochSec: Long): Long = secondsUntil(apprenticeReadyAtEpochSec, nowEpochSec)
+
+    fun labAssistantCooldownRemaining(nowEpochSec: Long): Long = secondsUntil(labAssistantReadyAtEpochSec, nowEpochSec)
+
+    private fun secondsUntil(endsAtEpochSec: Long?, nowEpochSec: Long): Long =
         endsAtEpochSec?.let { (it - nowEpochSec).coerceAtLeast(0) } ?: 0
 
     /** Soonest unfinished upgrade across builders, lab and pets. */
@@ -69,8 +77,9 @@ data class VillageSnapshot(
     /** Old exports may predate upgrades started or boosted since, so sync warns before using them. */
     fun isStale(nowEpochSec: Long): Boolean = nowEpochSec - exportedAtEpochSec > STALE_AFTER_SECONDS
 
-    /** The widget flags its footer once the last sync is this old. */
-    fun isWidgetStale(nowEpochSec: Long): Boolean = nowEpochSec - exportedAtEpochSec > WIDGET_STALE_AFTER_SECONDS
+    /** The widget flags its footer once the last sync is this old or an upgrade has finished since it. */
+    fun isWidgetStale(nowEpochSec: Long): Boolean =
+        nowEpochSec - exportedAtEpochSec > WIDGET_STALE_AFTER_SECONDS || allUpgrades.any { it.isDone(nowEpochSec) }
 
     companion object {
         const val STALE_AFTER_SECONDS = 60L * 60

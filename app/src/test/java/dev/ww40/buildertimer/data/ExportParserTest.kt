@@ -222,6 +222,85 @@ class ExportParserTest {
     }
 
     @Test
+    fun `tracks each helper's cooldown separately`() {
+        val parsed = parser.parse(
+            """{"tag":"#A","timestamp":100,"helpers":[{"data":93000000,"lvl":8,"helper_cooldown":81694},""" +
+                """{"data":93000001,"lvl":8},{"data":93000002,"lvl":5,"helper_cooldown":90000}]}""",
+        )
+        assertEquals(81_794L, parsed.apprenticeReadyAtEpochSec)
+        assertEquals(100L, parsed.labAssistantReadyAtEpochSec)
+    }
+
+    @Test
+    fun `has no helper times when the export lists no helpers`() {
+        val parsed = parser.parse("""{"tag":"#A","timestamp":100}""")
+        assertNull(parsed.apprenticeReadyAtEpochSec)
+        assertNull(parsed.labAssistantReadyAtEpochSec)
+    }
+
+    @Test
+    fun `a helper's shift adds its level to the upgrade's speed`() {
+        val parsed = helperExport(""""heroes":[{"data":28000001,"lvl":89,"timer":194891,"helper_timer":2494}]""")
+        assertEquals(100L + 194_891 - 2_494 * 9 + 2_494, parsed.builderUpgrades.single().finishesAtEpochSec)
+    }
+
+    @Test
+    fun `an upgrade can finish during a helper's shift`() {
+        val parsed = helperExport(""""heroes":[{"data":28000001,"lvl":89,"timer":900,"helper_timer":2494}]""")
+        assertEquals(200L, parsed.builderUpgrades.single().finishesAtEpochSec)
+    }
+
+    @Test
+    fun `a helper's level adds to a potion only on the upgrade it is assigned to`() {
+        val parsed = helperExport(
+            """"boosts":{"builder_boost":3432},""" +
+                """"heroes":[{"data":28000001,"lvl":89,"timer":194891,"helper_timer":2494},""" +
+                """{"data":28000000,"lvl":90,"timer":26696}]""",
+        )
+        val finishes = parsed.builderUpgrades.associate { it.dataId to it.finishesAtEpochSec - 100 }
+        assertEquals(3_432L + 194_891 - 2_494 * 18 - 938 * 10, finishes[28000001])
+        assertEquals(2_670L, finishes[28000000])
+    }
+
+    @Test
+    fun `the potion can outlast the helper or the helper the potion`() {
+        val parsed = helperExport(
+            """"boosts":{"builder_boost":600},""" +
+                """"heroes":[{"data":28000001,"lvl":89,"timer":100000,"helper_timer":3600}]""",
+        )
+        assertEquals(100L + 3_600 + 100_000 - 600 * 18 - 3_000 * 9, parsed.builderUpgrades.single().finishesAtEpochSec)
+    }
+
+    @Test
+    fun `the lab assistant speeds up research but not pets`() {
+        val parsed = helperExport(
+            """"units":[{"data":4000000,"lvl":1,"timer":30000,"helper_timer":1000}],""" +
+                """"pets":[{"data":73000000,"lvl":1,"timer":30000,"helper_timer":1000}]""",
+        )
+        assertEquals(100L + 1_000 + 30_000 - 1_000 * 5, parsed.labUpgrades.single().finishesAtEpochSec)
+        assertEquals(30_100L, parsed.petUpgrades.single().finishesAtEpochSec)
+    }
+
+    @Test
+    fun `a one-off helper counts as assigned`() {
+        val parsed = helperExport(""""heroes":[{"data":28000001,"lvl":89,"timer":194891,"helper_timer":2494,"helper_recurrent":false}]""")
+        assertEquals(parsed.builderUpgrades.single(), parsed.apprenticeTarget)
+    }
+
+    @Test
+    fun `keep assigned without an active shift adds no speed`() {
+        val parsed = helperExport(""""heroes":[{"data":28000001,"lvl":89,"timer":194891,"helper_recurrent":true}]""")
+        assertEquals(194_991L, parsed.builderUpgrades.single().finishesAtEpochSec)
+        assertEquals(parsed.builderUpgrades.single(), parsed.apprenticeTarget)
+    }
+
+    @Test
+    fun `a shift with no listed helper adds no speed`() {
+        val parsed = parser.parse("""{"tag":"#A","timestamp":100,"heroes":[{"data":28000001,"lvl":89,"timer":5000,"helper_timer":2494}]}""")
+        assertEquals(5_100L, parsed.builderUpgrades.single().finishesAtEpochSec)
+    }
+
+    @Test
     fun `ignores zero timers`() {
         val parsed = parser.parse("""{"tag":"#A","timestamp":100,"buildings":[{"data":1000005,"lvl":1,"timer":0}]}""")
         assertTrue(parsed.builderUpgrades.isEmpty())
@@ -235,6 +314,11 @@ class ExportParserTest {
         assertThrows(ExportFormatException::class.java) { parser.parse("""{"tag":"#A"}""") }
         assertThrows(ExportFormatException::class.java) { parser.parse("""{"timestamp":100}""") }
     }
+
+    /** Export at timestamp 100 with a level 8 Apprentice and a level 4 Lab Assistant. */
+    private fun helperExport(sections: String): VillageSnapshot = parser.parse(
+        """{"tag":"#A","timestamp":100,"helpers":[{"data":93000000,"lvl":8},{"data":93000001,"lvl":4}],$sections}""",
+    )
 
     private fun readResource(name: String): String =
         requireNotNull(javaClass.classLoader?.getResource(name)) { "Missing test resource $name" }.readText()

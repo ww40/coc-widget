@@ -5,6 +5,7 @@
     <string name="compact_widget_label">Next upgrade</string>
     <string name="compact_widget_description">Next upgrade to finish and free builders</string>
     <string name="setup_instructions">1. Add the Builder Timer widget to your home screen.\n\n2. In Clash of Clans: Settings → More Settings → Data Export → Copy.\n\n3. Tap Sync on the widget (or the button below).\n\nRe-sync whenever you start new upgrades. You\'ll get a notification as each one finishes.</string>
+    <string name="sync_tile_label">Sync timers</string>
     <string name="sync_from_clipboard">Sync from clipboard</string>
     <string name="sync_error_title">No village data found</string>
     <string name="sync_error_message">Your clipboard doesn\'t contain a Clash of Clans village export.\n\n1. Open Clash of Clans\n2. Go to Settings → More Settings → Data Export → Copy\n3. Come back and press ⟳ Sync on the widget again</string>

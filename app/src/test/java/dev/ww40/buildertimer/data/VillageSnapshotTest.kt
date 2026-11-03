@@ -46,9 +46,25 @@ class VillageSnapshotTest {
 
     @Test
     fun `flags the widget footer once the last sync is over a day old`() {
+        val idle = snapshot.copy(builderUpgrades = emptyList(), labUpgrades = emptyList())
         val day = VillageSnapshot.WIDGET_STALE_AFTER_SECONDS
-        assertFalse(snapshot.isWidgetStale(day))
-        assertTrue(snapshot.isWidgetStale(day + 1))
+        assertFalse(idle.isWidgetStale(day))
+        assertTrue(idle.isWidgetStale(day + 1))
+    }
+
+    @Test
+    fun `flags the widget footer once an upgrade has finished since the last sync`() {
+        assertFalse(snapshot.isWidgetStale(99))
+        assertTrue(snapshot.isWidgetStale(100))
+    }
+
+    @Test
+    fun `counts down to each helper being ready and stops at zero`() {
+        val waiting = snapshot.copy(apprenticeReadyAtEpochSec = 500, labAssistantReadyAtEpochSec = 200)
+        assertEquals(400L, waiting.apprenticeCooldownRemaining(100))
+        assertEquals(100L, waiting.labAssistantCooldownRemaining(100))
+        assertEquals(0L, waiting.apprenticeCooldownRemaining(500))
+        assertEquals(0L, waiting.labAssistantCooldownRemaining(900))
     }
 
     @Test
