@@ -22,17 +22,21 @@ class ExportParser(private val gameData: GameData) {
             ?: throw ExportFormatException("Export has no player tag")
 
         val buildings = root.entries("buildings")
-        val builderBoost = (root["boosts"] as? JsonObject)?.long("builder_boost")?.coerceAtLeast(0) ?: 0
+        val boosts = root["boosts"] as? JsonObject
+        val builderBoost = boosts?.long("builder_boost")?.coerceAtLeast(0) ?: 0
+        val labBoost = boosts?.long("lab_boost")?.coerceAtLeast(0) ?: 0
         return VillageSnapshot(
             tag = tag,
             townHallLevel = buildings.firstOrNull { it.int("data") == TOWN_HALL_ID }?.int("lvl"),
             exportedAtEpochSec = exportedAt,
             builderCount = builderCount(buildings),
-            builderUpgrades = upgrades(root, BUILDER_SECTIONS, exportedAt) { boostedSeconds(it, builderBoost) }
+            builderUpgrades = upgrades(root, BUILDER_SECTIONS, exportedAt) { boostedSeconds(it, builderBoost, BUILDER_BOOST_SPEEDUP) }
                 .sortedBy { it.finishesAtEpochSec },
-            labUpgrades = upgrades(root, LAB_SECTIONS, exportedAt).sortedBy { it.finishesAtEpochSec },
+            labUpgrades = upgrades(root, LAB_SECTIONS, exportedAt) { boostedSeconds(it, labBoost, LAB_BOOST_SPEEDUP) }
+                .sortedBy { it.finishesAtEpochSec },
             petUpgrades = upgrades(root, PET_SECTIONS, exportedAt).sortedBy { it.finishesAtEpochSec },
             builderBoostEndsAtEpochSec = (exportedAt + builderBoost).takeIf { builderBoost > 0 },
+            labBoostEndsAtEpochSec = (exportedAt + labBoost).takeIf { labBoost > 0 },
         )
     }
 
@@ -68,12 +72,12 @@ class ExportParser(private val gameData: GameData) {
         }
 
     /**
-     * Export timers ignore an active Builder Potion, which makes builders work
-     * [BUILDER_BOOST_SPEEDUP]x faster for [boostSeconds] of real time.
+     * Export timers ignore an active potion, which makes work go [speedup]x faster
+     * for [boostSeconds] of real time.
      */
-    private fun boostedSeconds(timer: Long, boostSeconds: Long): Long {
-        val boostedWork = boostSeconds * BUILDER_BOOST_SPEEDUP
-        if (timer <= boostedWork) return (timer + BUILDER_BOOST_SPEEDUP - 1) / BUILDER_BOOST_SPEEDUP
+    private fun boostedSeconds(timer: Long, boostSeconds: Long, speedup: Long): Long {
+        val boostedWork = boostSeconds * speedup
+        if (timer <= boostedWork) return (timer + speedup - 1) / speedup
         return timer - boostedWork + boostSeconds
     }
 
@@ -93,6 +97,7 @@ class ExportParser(private val gameData: GameData) {
         const val BOB_HUT_ID = 1000064
         private val BUILDER_HOME_IDS = setOf(BUILDERS_HUT_ID, BOB_HUT_ID)
         const val BUILDER_BOOST_SPEEDUP = 10L
+        const val LAB_BOOST_SPEEDUP = 24L
 
         private val BUILDER_SECTIONS = listOf("buildings", "traps", "heroes")
         private val LAB_SECTIONS = listOf("units", "spells", "siege_machines")

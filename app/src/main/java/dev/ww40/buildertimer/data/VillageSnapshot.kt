@@ -30,6 +30,8 @@ data class VillageSnapshot(
     val petUpgrades: List<Upgrade>,
     /** When an active Builder Potion runs out, or null when none was active at export. */
     val builderBoostEndsAtEpochSec: Long? = null,
+    /** When an active Research Potion runs out, or null when none was active at export. */
+    val labBoostEndsAtEpochSec: Long? = null,
 ) {
     val allUpgrades: List<Upgrade> get() = builderUpgrades + labUpgrades + petUpgrades
     val apprenticeTarget: Upgrade? get() = builderUpgrades.firstOrNull { it.hasHelperAssigned }
@@ -50,6 +52,9 @@ data class VillageSnapshot(
 
     fun builderBoostRemaining(nowEpochSec: Long): Long =
         builderBoostEndsAtEpochSec?.let { (it - nowEpochSec).coerceAtLeast(0) } ?: 0
+
+    fun labBoostRemaining(nowEpochSec: Long): Long =
+        labBoostEndsAtEpochSec?.let { (it - nowEpochSec).coerceAtLeast(0) } ?: 0
 
     /** Soonest unfinished upgrade across builders, lab and pets. */
     fun nextUpgrade(nowEpochSec: Long): Upgrade? =

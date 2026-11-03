@@ -79,13 +79,13 @@ Items the static data omits can be named (and given `upgradeSeconds`) in `tools/
 python3 tools/fetch_icons.py
 ```
 
-Items without an icon show a section emoji (🔨 builders, ⚗️ lab, 🐾 pets). `potion_builder.webp`, shown with the time left on an active Builder Potion, is ClashKing's `magic_items/builder_potion.webp`.
+Items without an icon show a section emoji (🔨 builders, ⚗️ lab, 🐾 pets). `potion_builder.webp` and `potion_research.webp`, shown with the time left on an active potion, are ClashKing's `magic_items/builder_potion.webp` and `magic_items/research_potion.webp`.
 
 ## Behaviour notes
 
 - Countdowns are minute-precision; widgets refresh every minute while the device is awake.
 - Finish notifications use inexact alarms, so they may arrive a few minutes late under Doze.
-- An active Builder Potion is included in builder finish times. Research and Pet Potions aren't yet.
+- Active Builder and Research Potions are included in finish times, so during a potion the widget shows less time than the game. Pet Potions aren't included yet.
 - Timers are only as current as the last sync; the widget footer turns amber once the last sync is over a day old.
 
 ## Credits and licence

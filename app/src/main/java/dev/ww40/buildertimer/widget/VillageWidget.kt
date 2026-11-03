@@ -1,6 +1,7 @@
 package dev.ww40.buildertimer.widget
 
 import android.content.Context
+import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -74,6 +75,11 @@ private enum class Section(val fallbackIcon: String, val freeLabel: String) {
     PETS(PET_FALLBACK_ICON, "Pet House free"),
 }
 
+private enum class Potion(@DrawableRes val icon: Int, val label: String) {
+    BUILDER(R.drawable.potion_builder, "Builder Potion"),
+    RESEARCH(R.drawable.potion_research, "Research Potion"),
+}
+
 /** Everything a row needs that's the same for every row in one composition. */
 private class RowContext(val nowEpochSec: Long, val settings: Settings, val rowWidth: Dp)
 
@@ -101,9 +107,15 @@ private fun WidgetContent() {
         }
         val now = rows.nowEpochSec
         LazyColumn(modifier = GlanceModifier.defaultWeight()) {
-            item { SectionTitle(buildersTitle(snapshot, now), boostRemainingSeconds = snapshot.builderBoostRemaining(now)) }
+            item { SectionTitle(buildersTitle(snapshot, now), Potion.BUILDER, snapshot.builderBoostRemaining(now)) }
             items(snapshot.builderUpgrades) { UpgradeRow(it, Section.BUILDERS, rows) }
-            item { SectionTitle(if (snapshot.labUpgrades.all { it.isDone(now) }) "LAB · idle" else "LAB") }
+            item {
+                SectionTitle(
+                    if (snapshot.labUpgrades.all { it.isDone(now) }) "LAB · idle" else "LAB",
+                    Potion.RESEARCH,
+                    snapshot.labBoostRemaining(now),
+                )
+            }
             items(snapshot.labUpgrades) { UpgradeRow(it, Section.LAB, rows) }
             if (snapshot.petUpgrades.isNotEmpty()) {
                 item { SectionTitle("PETS") }
@@ -153,18 +165,18 @@ private fun Header(title: String) {
 
 /** Section heading, followed by the potion icon and time left while a boost is active. */
 @Composable
-private fun SectionTitle(text: String, boostRemainingSeconds: Long = 0) {
+private fun SectionTitle(text: String, potion: Potion? = null, boostRemainingSeconds: Long = 0) {
     val style = TextStyle(color = WidgetPalette.sectionTitle, fontSize = 13.sp, fontWeight = FontWeight.Bold)
     Row(
         modifier = GlanceModifier.padding(top = 6.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(text, style = style)
-        if (boostRemainingSeconds <= 0) return@Row
+        if (potion == null || boostRemainingSeconds <= 0) return@Row
         Spacer(GlanceModifier.width(8.dp))
         Image(
-            provider = ImageProvider(R.drawable.potion_builder),
-            contentDescription = "Builder Potion",
+            provider = ImageProvider(potion.icon),
+            contentDescription = potion.label,
             modifier = GlanceModifier.size(POTION_ICON_SIZE),
             contentScale = ContentScale.Fit,
         )

@@ -135,6 +135,7 @@ class ExportParserTest {
         assertEquals(3_605L, finishes["Barbarian King"])
         assertEquals(100_000L - 36_000 + 3_600, finishes["Mortar"])
         assertEquals(30_100L, parsed.labUpgrades.single().finishesAtEpochSec)
+        assertNull(parsed.labBoostEndsAtEpochSec)
 
         assertEquals(3_700L, parsed.builderBoostEndsAtEpochSec)
         assertEquals(3_600L, parsed.builderBoostRemaining(100))
@@ -150,6 +151,27 @@ class ExportParserTest {
         assertEquals(30_100L, parsed.builderUpgrades.single().finishesAtEpochSec)
         assertNull(parsed.builderBoostEndsAtEpochSec)
         assertEquals(0L, parsed.builderBoostRemaining(100))
+    }
+
+    @Test
+    fun `speeds up lab timers while a research potion is active`() {
+        val parsed = parser.parse(
+            """{"tag":"#A","timestamp":100,"boosts":{"lab_boost":3593},""" +
+                """"units":[{"data":4000109,"lvl":1,"timer":204269}],""" +
+                """"spells":[{"data":26000000,"lvl":1,"timer":24005}],""" +
+                """"buildings":[{"data":1000019,"lvl":16,"timer":30000}],""" +
+                """"pets":[{"data":73000000,"lvl":1,"timer":30000}]}""",
+        )
+        val finishes = parsed.labUpgrades.associate { it.dataId to it.finishesAtEpochSec - 100 }
+        assertEquals(204_269L - 3_593 * 24 + 3_593, finishes[4000109])
+        assertEquals(1_001L, finishes[26000000])
+        assertEquals(30_100L, parsed.builderUpgrades.single().finishesAtEpochSec)
+        assertEquals(30_100L, parsed.petUpgrades.single().finishesAtEpochSec)
+
+        assertEquals(3_693L, parsed.labBoostEndsAtEpochSec)
+        assertEquals(3_593L, parsed.labBoostRemaining(100))
+        assertEquals(0L, parsed.labBoostRemaining(5_000))
+        assertNull(parsed.builderBoostEndsAtEpochSec)
     }
 
     @Test
