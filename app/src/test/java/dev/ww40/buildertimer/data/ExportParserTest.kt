@@ -195,6 +195,33 @@ class ExportParserTest {
     }
 
     @Test
+    fun `lists guardian upgrades as builder work`() {
+        val parsed = parser.parse(
+            """{"tag":"#A","timestamp":100,""" +
+                """"buildings":[{"data":1000015,"lvl":4,"cnt":2},{"data":1000019,"lvl":15,"timer":70717}],""" +
+                """"guardians":[{"data":107000000,"lvl":1},""" +
+                """{"data":107000008,"lvl":2,"timer":54865,"helper_timer":0,"helper_recurrent":false}]}""",
+        )
+        val logger = parsed.builderUpgrades.first()
+        assertEquals("Logger", logger.name)
+        assertEquals(3, logger.targetLevel)
+        assertEquals(777_600L, logger.totalSeconds)
+        assertEquals(54_965L, logger.finishesAtEpochSec)
+        assertEquals(2, parsed.builderUpgrades.size)
+        assertEquals(2, parsed.busyBuilders(100))
+        assertEquals(0, parsed.freeBuilders(100))
+    }
+
+    @Test
+    fun `speeds up guardian timers while a builder potion is active`() {
+        val parsed = parser.parse(
+            """{"tag":"#A","timestamp":100,"boosts":{"builder_boost":3600},""" +
+                """"guardians":[{"data":107000008,"lvl":2,"timer":54865}]}""",
+        )
+        assertEquals(100L + 54_865 - 36_000 + 3_600, parsed.builderUpgrades.single().finishesAtEpochSec)
+    }
+
+    @Test
     fun `ignores zero timers`() {
         val parsed = parser.parse("""{"tag":"#A","timestamp":100,"buildings":[{"data":1000005,"lvl":1,"timer":0}]}""")
         assertTrue(parsed.builderUpgrades.isEmpty())

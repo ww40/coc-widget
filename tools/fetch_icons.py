@@ -30,6 +30,7 @@ SINGLE_PATHS = {
     26: "spells/{name}.webp",
     28: "heroes/{name}/icon.webp",
     73: "pets/{name}/icon.webp",
+    107: "guardians/{name}/icon.webp",
 }
 LEVEL_FILE = re.compile(r"level_(\d+)\.webp$")
 

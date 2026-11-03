@@ -103,7 +103,7 @@ class ExportParser(private val gameData: GameData) {
         const val LAB_BOOST_SPEEDUP = 24L
         const val PET_BOOST_SPEEDUP = 24L
 
-        private val BUILDER_SECTIONS = listOf("buildings", "traps", "heroes")
+        private val BUILDER_SECTIONS = listOf("buildings", "traps", "heroes", "guardians")
         private val LAB_SECTIONS = listOf("units", "spells", "siege_machines")
         private val PET_SECTIONS = listOf("pets")
     }

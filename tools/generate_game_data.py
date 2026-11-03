@@ -22,9 +22,9 @@ USER_AGENT = "coc-widget-game-data/0.1 (personal non-commercial project)"
 
 # Buildings and traps store the time to *reach* a level on that level's entry.
 BUILD_TIME_CATEGORIES = ("buildings", "traps")
-# Troops, spells, heroes and pets store the time to go *from* a level to the next.
-UPGRADE_TIME_CATEGORIES = ("troops", "spells", "heroes", "pets")
-NAME_ONLY_CATEGORIES = ("helpers", "guardians")
+# Troops, spells, heroes, pets and guardians store the time to go *from* a level to the next.
+UPGRADE_TIME_CATEGORIES = ("troops", "spells", "heroes", "pets", "guardians")
+NAME_ONLY_CATEGORIES = ("helpers",)
 CATEGORIES = BUILD_TIME_CATEGORIES + UPGRADE_TIME_CATEGORIES + NAME_ONLY_CATEGORIES
 
 
