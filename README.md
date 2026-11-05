@@ -89,7 +89,7 @@ Use the potion or snack, or assign the helper, first, then sync. Timers then inc
 
 - **Rows:** each upgrade shows its progress and time left, or its finish time if you turned that on. A finished row turns gold.
 - **Header:** shows how many builders are free.
-- **Goblin badge:** marks an upgrade being run by the event Goblin.
+- **Goblin badge:** marks an upgrade being run by the event Goblin. When one finishes, its row says **✓ Finished**, because the Goblin never takes up one of your builders or your lab.
 - **Potion icon:** shows the time left on an active potion, Builder Bite, Study Soup or Clock Tower boost. Timers already include it, so the widget shows less time than the game.
 - **Builder Base and Star Lab:** appear below your other upgrades while any are running. Once both are fully upgraded, a **BUILDER BASE · ✓ Maxed** line shows instead. This checks walls too, but not anything you haven't built yet.
 - **Apprentice and Assistant:** the footer counts down until each helper can take a new job, then turns amber.

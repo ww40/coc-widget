@@ -72,6 +72,12 @@ class VillageWidget : GlanceAppWidget() {
     }
 }
 
+private const val GOBLIN_FINISHED_LABEL = "Finished"
+
+/** The Goblin is a temporary extra, so its finishing doesn't free a builder or the lab. */
+internal fun finishedLabel(freeLabel: String, isGoblin: Boolean): String =
+    "✓ ${if (isGoblin) GOBLIN_FINISHED_LABEL else freeLabel}"
+
 /** Per-section wording; a finished row reads e.g. "✓ Builder free". */
 private enum class Section(val fallbackIcon: String, val freeLabel: String) {
     BUILDERS(BUILDER_FALLBACK_ICON, "Builder free"),
@@ -268,7 +274,7 @@ private fun UpgradeRow(upgrade: Upgrade, section: Section, rows: RowContext) {
                     maxLines = 1,
                 )
                 Text(
-                    if (done) "✓ ${section.freeLabel}" else "⏱ ${timeLabel(context, upgrade, rows.nowEpochSec, rows.settings)}",
+                    if (done) finishedLabel(section.freeLabel, upgrade.isGoblin) else "⏱ ${timeLabel(context, upgrade, rows.nowEpochSec, rows.settings)}",
                     style = rowTextStyle(textColor),
                 )
             }
