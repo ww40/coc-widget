@@ -399,6 +399,86 @@ class ExportParserTest {
     }
 
     /** Export at timestamp 100 with a level 8 Apprentice and a level 4 Lab Assistant. */
+    @Test
+    fun `a builder bite doubles builder speed but leaves other sections alone`() {
+        val parsed = parser.parse(
+            """{"tag":"#A","timestamp":100,"boosts":{"builder_consumable":6038,"clocktower_cooldown":20042},""" +
+                """"heroes":[{"data":28000002,"lvl":47,"timer":39080}],""" +
+                """"traps":[{"data":12000006,"lvl":4,"timer":1467,"extra":true}],""" +
+                """"units":[{"data":4000000,"lvl":1,"timer":30000}],""" +
+                """"pets":[{"data":73000000,"lvl":1,"timer":30000}],""" +
+                """"buildings2":[{"data":1000044,"lvl":6,"timer":27141}]}""",
+        )
+        val finishes = parsed.builderUpgrades.associate { it.dataId to it.finishesAtEpochSec - 100 }
+        assertEquals(39_080L - 6_038, finishes[28000002])
+        assertEquals(734L, finishes[12000006])
+        assertEquals(30_100L, parsed.labUpgrades.single().finishesAtEpochSec)
+        assertEquals(30_100L, parsed.petUpgrades.single().finishesAtEpochSec)
+        assertEquals(27_241L, parsed.builderBaseUpgrades.single().finishesAtEpochSec)
+        assertEquals(6_138L, parsed.builderBiteEndsAtEpochSec)
+        assertEquals(6_038L, parsed.builderBiteRemaining(100))
+        assertNull(parsed.builderBoostEndsAtEpochSec)
+    }
+
+    @Test
+    fun `study soup makes research four times as fast but leaves pets and builders alone`() {
+        val parsed = parser.parse(
+            """{"tag":"#A","timestamp":100,"boosts":{"lab_consumable":9620},""" +
+                """"units":[{"data":4000109,"lvl":2,"timer":85396,"helper_recurrent":true},""" +
+                """{"data":4000058,"lvl":6,"timer":64618,"extra":true}],""" +
+                """"pets":[{"data":73000004,"lvl":8,"timer":46755}],""" +
+                """"buildings":[{"data":1000032,"lvl":11,"timer":135926}]}""",
+        )
+        val finishes = parsed.labUpgrades.associate { it.dataId to it.finishesAtEpochSec - 100 }
+        assertEquals(85_396L - 9_620 * 3, finishes[4000109])
+        assertEquals(64_618L - 9_620 * 3, finishes[4000058])
+        assertEquals(46_855L, parsed.petUpgrades.single().finishesAtEpochSec)
+        assertEquals(136_026L, parsed.builderUpgrades.single().finishesAtEpochSec)
+        assertEquals(9_720L, parsed.studySoupEndsAtEpochSec)
+        assertNull(parsed.labBoostEndsAtEpochSec)
+    }
+
+    @Test
+    fun `a snack adds to a potion rather than multiplying it`() {
+        val parsed = parser.parse(
+            """{"tag":"#A","timestamp":100,"boosts":{"builder_boost":600,"builder_consumable":1000,"lab_boost":600,"lab_consumable":1000},""" +
+                """"heroes":[{"data":28000000,"lvl":90,"timer":100000}],""" +
+                """"units":[{"data":4000000,"lvl":1,"timer":100000}]}""",
+        )
+        assertEquals(100L + 1_000 + 100_000 - 600 * 11 - 400 * 2, parsed.builderUpgrades.single().finishesAtEpochSec)
+        assertEquals(100L + 1_000 + 100_000 - 600 * 27 - 400 * 4, parsed.labUpgrades.single().finishesAtEpochSec)
+    }
+
+    @Test
+    fun `a snack, a potion and a helper's shift all add up, each ending on its own`() {
+        val parsed = helperExport(
+            """"boosts":{"builder_boost":600,"builder_consumable":1000},""" +
+                """"heroes":[{"data":28000001,"lvl":89,"timer":100000,"helper_timer":3600}]""",
+        )
+        val work = 600 * 19 + 400 * 10 + 2_600 * 9
+        assertEquals(100L + 3_600 + 100_000 - work, parsed.builderUpgrades.single().finishesAtEpochSec)
+    }
+
+    @Test
+    fun `a boost that outlasts the upgrade only counts until it finishes`() {
+        val parsed = parser.parse(
+            """{"tag":"#A","timestamp":100,"boosts":{"builder_consumable":3600},""" +
+                """"heroes":[{"data":28000000,"lvl":90,"timer":101}]}""",
+        )
+        assertEquals(151L, parsed.builderUpgrades.single().finishesAtEpochSec)
+    }
+
+    @Test
+    fun `no active snack means no snack end time`() {
+        val parsed = parser.parse(
+            """{"tag":"#A","timestamp":100,"boosts":{"builder_consumable":0,"lab_consumable":-5},""" +
+                """"heroes":[{"data":28000000,"lvl":90,"timer":1000}]}""",
+        )
+        assertNull(parsed.builderBiteEndsAtEpochSec)
+        assertNull(parsed.studySoupEndsAtEpochSec)
+        assertEquals(1_100L, parsed.builderUpgrades.single().finishesAtEpochSec)
+    }
+
     private fun helperExport(sections: String): VillageSnapshot = parser.parse(
         """{"tag":"#A","timestamp":100,"helpers":[{"data":93000000,"lvl":8},{"data":93000001,"lvl":4}],$sections}""",
     )

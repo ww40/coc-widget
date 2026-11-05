@@ -40,6 +40,10 @@ data class VillageSnapshot(
     val petBoostEndsAtEpochSec: Long? = null,
     /** When an active Clock Tower boost runs out, or null when none was active at export. */
     val clockTowerBoostEndsAtEpochSec: Long? = null,
+    /** When an active Builder Bite runs out, or null when none was active at export. */
+    val builderBiteEndsAtEpochSec: Long? = null,
+    /** When an active Study Soup runs out, or null when none was active at export. */
+    val studySoupEndsAtEpochSec: Long? = null,
     /** When the Builder's Apprentice can take a new job, or null when the export doesn't list it. */
     val apprenticeReadyAtEpochSec: Long? = null,
     /** When the Lab Assistant can take a new job, or null when the export doesn't list it. */
@@ -71,6 +75,10 @@ data class VillageSnapshot(
     fun petBoostRemaining(nowEpochSec: Long): Long = secondsUntil(petBoostEndsAtEpochSec, nowEpochSec)
 
     fun clockTowerBoostRemaining(nowEpochSec: Long): Long = secondsUntil(clockTowerBoostEndsAtEpochSec, nowEpochSec)
+
+    fun builderBiteRemaining(nowEpochSec: Long): Long = secondsUntil(builderBiteEndsAtEpochSec, nowEpochSec)
+
+    fun studySoupRemaining(nowEpochSec: Long): Long = secondsUntil(studySoupEndsAtEpochSec, nowEpochSec)
 
     fun apprenticeCooldownRemaining(nowEpochSec: Long): Long = secondsUntil(apprenticeReadyAtEpochSec, nowEpochSec)
 

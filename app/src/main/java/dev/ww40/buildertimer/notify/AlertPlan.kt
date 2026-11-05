@@ -19,6 +19,8 @@ private fun VillageSnapshot.boostAlerts() = listOf(
     BoostAlert("Research Potion", "Your lab is back to normal speed.", labBoostEndsAtEpochSec),
     BoostAlert("Pet Potion", "Your Pet House is back to normal speed.", petBoostEndsAtEpochSec),
     BoostAlert("Clock Tower boost", "Your Builder Base is back to normal speed.", clockTowerBoostEndsAtEpochSec),
+    BoostAlert("Builder Bite", "Its speed-up on your builders has ended.", builderBiteEndsAtEpochSec),
+    BoostAlert("Study Soup", "Its speed-up on your lab has ended.", studySoupEndsAtEpochSec),
 )
 
 /** Every request code [plannedAlerts] could use for [snapshot], whichever alerts are switched on. */

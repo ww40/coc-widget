@@ -76,6 +76,32 @@ class AlertPlanTest {
     }
 
     @Test
+    fun `snack alerts fire when the snack runs out and stay accurate while a potion continues`() {
+        val alerts = plannedAlerts(
+            snapshot.copy(builderBiteEndsAtEpochSec = now + 60, studySoupEndsAtEpochSec = now + 90),
+            Settings(),
+            now,
+            zone,
+        )
+        val bite = alerts.single { it.title == "Builder Bite finished" }
+        assertEquals(now + 60, bite.atEpochSec)
+        assertEquals("Its speed-up on your builders has ended.", bite.text)
+        assertEquals(now + 90, alerts.single { it.title == "Study Soup finished" }.atEpochSec)
+        assertEquals(alerts.size, alerts.map { it.requestCode }.toSet().size)
+    }
+
+    @Test
+    fun `snack alerts follow the boost switch`() {
+        val alerts = plannedAlerts(
+            snapshot.copy(builderBiteEndsAtEpochSec = now + 60),
+            Settings(notifyBoostEnded = false),
+            now,
+            zone,
+        )
+        assertTrue(alerts.none { it.title == "Builder Bite finished" })
+    }
+
+    @Test
     fun `every planned alert can be cancelled and no two share a request code`() {
         val codes = alertRequestCodes(snapshot.copy(labBoostEndsAtEpochSec = now + 60, petBoostEndsAtEpochSec = now + 60))
         assertEquals(codes.size, codes.toSet().size)

@@ -86,6 +86,8 @@ private enum class Potion(@DrawableRes val icon: Int, val label: String) {
     RESEARCH(R.drawable.potion_research, "Research Potion"),
     PET(R.drawable.potion_pet, "Pet Potion"),
     CLOCK_TOWER(R.drawable.potion_clock_tower, "Clock Tower boost"),
+    BUILDER_BITE(R.drawable.snack_builder_bite, "Builder Bite"),
+    STUDY_SOUP(R.drawable.snack_study_soup, "Study Soup"),
 }
 
 /** Everything a row needs that's the same for every row in one composition. */
@@ -117,29 +119,35 @@ private fun WidgetContent() {
         }
         val now = rows.nowEpochSec
         LazyColumn(modifier = GlanceModifier.defaultWeight()) {
-            item { SectionTitle(buildersTitle(snapshot, now), Potion.BUILDER, snapshot.builderBoostRemaining(now)) }
+            item {
+                SectionTitle(
+                    buildersTitle(snapshot, now),
+                    Potion.BUILDER to snapshot.builderBoostRemaining(now),
+                    Potion.BUILDER_BITE to snapshot.builderBiteRemaining(now),
+                )
+            }
             items(snapshot.builderUpgrades) { UpgradeRow(it, Section.BUILDERS, rows) }
             item {
                 SectionTitle(
                     if (snapshot.labSecondsUntilFree(now) == 0L) "LAB · idle" else "LAB",
-                    Potion.RESEARCH,
-                    snapshot.labBoostRemaining(now),
+                    Potion.RESEARCH to snapshot.labBoostRemaining(now),
+                    Potion.STUDY_SOUP to snapshot.studySoupRemaining(now),
                 )
             }
             items(snapshot.labUpgrades) { UpgradeRow(it, Section.LAB, rows) }
             if (snapshot.petUpgrades.isNotEmpty()) {
-                item { SectionTitle("PETS", Potion.PET, snapshot.petBoostRemaining(now)) }
+                item { SectionTitle("PETS", Potion.PET to snapshot.petBoostRemaining(now)) }
                 items(snapshot.petUpgrades) { UpgradeRow(it, Section.PETS, rows) }
             }
             if (settings.showBuilderBase && snapshot.builderBaseUpgrades.isNotEmpty()) {
-                item { SectionTitle("BUILDER BASE", Potion.CLOCK_TOWER, snapshot.clockTowerBoostRemaining(now)) }
+                item { SectionTitle("BUILDER BASE", Potion.CLOCK_TOWER to snapshot.clockTowerBoostRemaining(now)) }
                 items(snapshot.builderBaseUpgrades) { UpgradeRow(it, Section.BUILDER_BASE, rows) }
             }
             if (settings.showBuilderBase && snapshot.builderBaseMaxed) {
                 item { SectionTitle("BUILDER BASE · ✓ Maxed") }
             }
             if (settings.showBuilderBase && snapshot.starLabUpgrades.isNotEmpty()) {
-                item { SectionTitle("STAR LAB", Potion.CLOCK_TOWER, snapshot.clockTowerBoostRemaining(now)) }
+                item { SectionTitle("STAR LAB", Potion.CLOCK_TOWER to snapshot.clockTowerBoostRemaining(now)) }
                 items(snapshot.starLabUpgrades) { UpgradeRow(it, Section.STAR_LAB, rows) }
             }
             val estimates = if (settings.showTimeToMax) snapshot.timeToMax[settings.maxTarget].orEmpty() else emptyList()
@@ -197,26 +205,32 @@ private fun Header(title: String) {
     }
 }
 
-/** Section heading, followed by the potion icon and time left while a boost is active. */
+/** Section heading, followed by the icon and time left of each boost still active. */
 @Composable
-private fun SectionTitle(text: String, potion: Potion? = null, boostRemainingSeconds: Long = 0) {
+private fun SectionTitle(text: String, vararg boosts: Pair<Potion, Long>) {
     val style = TextStyle(color = palette.sectionTitle, fontSize = 13.sp, fontWeight = FontWeight.Bold)
     Row(
         modifier = GlanceModifier.padding(top = 6.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(text, style = style)
-        if (potion == null || boostRemainingSeconds <= 0) return@Row
-        Spacer(GlanceModifier.width(8.dp))
-        Image(
-            provider = ImageProvider(potion.icon),
-            contentDescription = potion.label,
-            modifier = GlanceModifier.size(POTION_ICON_SIZE),
-            contentScale = ContentScale.Fit,
-        )
-        Spacer(GlanceModifier.width(2.dp))
-        Text(formatRemaining(boostRemainingSeconds), style = style.copy(color = palette.boost))
+        boosts.filter { (_, remainingSeconds) -> remainingSeconds > 0 }.forEach { (potion, remainingSeconds) ->
+            BoostBadge(potion, remainingSeconds, style.copy(color = palette.boost))
+        }
     }
+}
+
+@Composable
+private fun BoostBadge(potion: Potion, remainingSeconds: Long, style: TextStyle) {
+    Spacer(GlanceModifier.width(8.dp))
+    Image(
+        provider = ImageProvider(potion.icon),
+        contentDescription = potion.label,
+        modifier = GlanceModifier.size(POTION_ICON_SIZE),
+        contentScale = ContentScale.Fit,
+    )
+    Spacer(GlanceModifier.width(2.dp))
+    Text(formatRemaining(remainingSeconds), style = style)
 }
 
 @Composable

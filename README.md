@@ -6,11 +6,11 @@ Android home-screen widgets that track your Clash of Clans builder, lab and pet 
 
 **[Download the latest APK](https://github.com/ww40/coc-widget/releases/latest)**
 
-<a href="https://github.com/ww40/coc-widget/releases/download/v0.1.11/builder-timer-widget-v0.1.11.apk"><img src="docs/download-apk-badge.png" alt="Download Android APK" width="220"></a>
+<a href="https://github.com/ww40/coc-widget/releases/download/v0.1.12/builder-timer-widget-v0.1.12.apk"><img src="docs/download-apk-badge.png" alt="Download Android APK" width="220"></a>
 
 - **Full widget:** every builder, lab, pet, Builder Base and Star Lab upgrade with icons, progress bars and countdowns (or finish times). Finished rows turn gold and the header shows free builders.
 - **Compact 2×1 widget:** the next upgrade to finish, how many builders are free and when your lab is next free.
-- **Notifications** when upgrades finish or potions run out. Choose which ones you get, with optional quiet hours that hold overnight alerts until morning.
+- **Notifications** when upgrades finish or potions and snacks run out. Choose which ones you get, with optional quiet hours that hold overnight alerts until morning.
 - **Private:** the app has no internet permission. Your village data never leaves your phone.
 
 ## Install
@@ -62,7 +62,7 @@ Sync whenever something changes in the game:
 
 - You start an upgrade.
 - You finish one early with gems, a book or a hammer.
-- You use a potion.
+- You use a potion, Builder Bite or Study Soup.
 - You assign a helper, or a new helper shift starts.
 
 The footer shows an amber **re-sync** once an upgrade has finished since your last sync, or that sync is over a day old.
@@ -77,7 +77,7 @@ Between upgrades, the widget shows what's running and when your next builder, la
 
 ### Potions and helpers
 
-Use the potion or assign the helper first, then sync. Timers then include the speed-up, so they'll show less time than the game does. That's expected: the game shows upgrade times as if no speed-up were running, and the widget shows when upgrades will really finish.
+Use the potion or snack, or assign the helper, first, then sync. Timers then include the speed-up, so they'll show less time than the game does. That's expected: the game shows upgrade times as if no speed-up were running, and the widget shows when upgrades will really finish.
 
 ### Planning ahead
 
@@ -90,7 +90,7 @@ Use the potion or assign the helper first, then sync. Timers then include the sp
 - **Rows:** each upgrade shows its progress and time left, or its finish time if you turned that on. A finished row turns gold.
 - **Header:** shows how many builders are free.
 - **Goblin badge:** marks an upgrade being run by the event Goblin.
-- **Potion icon:** shows the time left on an active potion or Clock Tower boost. Timers already include it, so the widget shows less time than the game.
+- **Potion icon:** shows the time left on an active potion, Builder Bite, Study Soup or Clock Tower boost. Timers already include it, so the widget shows less time than the game.
 - **Builder Base and Star Lab:** appear below your other upgrades while any are running. Once both are fully upgraded, a **BUILDER BASE · ✓ Maxed** line shows instead. This checks walls too, but not anything you haven't built yet.
 - **Apprentice and Assistant:** the footer counts down until each helper can take a new job, then turns amber.
 - **Amber "re-sync" footer:** an upgrade has finished since your last sync, or that sync is over a day old.
@@ -106,7 +106,6 @@ Use the potion or assign the helper first, then sync. Timers then include the sp
 
 - **Resources:** gold, elixir and dark elixir aren't in the export.
 - **More than one account:** the widget holds one village, so syncing another account replaces it.
-- **Builder Bite and Study Soup:** these are timed as full potions, so finish times will look too early.
 - **Future helper shifts:** only a shift running at your last sync is counted. With **Keep assigned**, sync after each new shift starts.
 
 ## Settings
@@ -132,7 +131,7 @@ Under **Notifications**:
 
 <p align="center"><img src="docs/screenshots/settings-notifications.png" alt="Notifications settings with a switch for each type of alert, quiet hours and a test notification button" width="600"></p>
 
-- **What you're told about:** separate switches for builder upgrades, lab research, pet upgrades, and potions or Clock Tower boosts ending. Anything switched off still shows on the widgets.
+- **What you're told about:** separate switches for builder upgrades, lab research, pet upgrades, and potions, Builder Bites, Study Soups or Clock Tower boosts ending. Anything switched off still shows on the widgets.
 - **Quiet hours:** notifications due in this window arrive when it ends instead.
 - **Send test notification:** sends one straight away to check notifications work.
 
@@ -201,13 +200,14 @@ Items the static data omits can be named (and given `upgradeSeconds`) in `tools/
 python3 tools/fetch_icons.py
 ```
 
-Items without an icon show a section emoji (🔨 builders, ⚗️ lab, 🐾 pets). `potion_builder.webp`, `potion_research.webp`, `potion_pet.webp` and `potion_clock_tower.webp`, shown with the time left on an active boost, are ClashKing's `magic_items/builder_potion.webp`, `magic_items/research_potion.webp`, `magic_items/pet_potion.webp` and `magic_items/clock_tower_potion.webp`.
+Items without an icon show a section emoji (🔨 builders, ⚗️ lab, 🐾 pets). `potion_builder.webp`, `potion_research.webp`, `potion_pet.webp`, `potion_clock_tower.webp`, `snack_builder_bite.webp` and `snack_study_soup.webp`, shown with the time left on an active boost, are ClashKing's `magic_items/builder_potion.webp`, `magic_items/research_potion.webp`, `magic_items/pet_potion.webp`, `magic_items/clock_tower_potion.webp`, `magic_snacks/builder_bite.webp` and `magic_snacks/study_soup.webp`.
 
 ## Behaviour notes
 
 - Countdowns are minute-precision; widgets refresh every minute while the device is awake.
 - Finish notifications use inexact alarms, so they may arrive a few minutes late under Doze.
 - Active Builder, Research and Pet Potions and Clock Tower boosts are included in finish times, so during one the widget shows less time than the game. Clock Tower boosts are timed at 10x, which hasn't been measured against the game yet.
+- Builder Bite (2x) and Study Soup (4x) are included too, and add to a potion rather than replacing it: 11x with a Builder Potion, 27x with a Research Potion. These speeds come from community guides and haven't been measured against the game.
 - A helper's current shift is included in finish times, adding its level to the upgrade's speed (a level 8 helper runs at 9x, or 18x during a Builder Potion). That speed comes from the game's data and hasn't been measured against the game.
 - Time to max is a rough estimate from your last sync. Heroes, Guardians and Buildings share your builders, so each time assumes your builders work only on that type, and the times don't add up to an overall total. Items you haven't built or unlocked aren't counted, the Builder Base and Star Lab aren't included, and speed-ups such as potions, helpers and Gold Pass are ignored.
 - Timers are only as current as the last sync; the widget footer turns amber once an upgrade has finished since the last sync, or that sync is over a day old.

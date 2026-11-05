@@ -11,6 +11,11 @@ import kotlinx.serialization.json.longOrNull
 
 class ExportFormatException(message: String, cause: Throwable? = null) : Exception(message, cause)
 
+/** Adds [bonusRate] to an upgrade's speed for the first [seconds] of real time. */
+private class SpeedBoost(val seconds: Long, val bonusRate: Long)
+
+private fun potionBoost(seconds: Long, speedup: Long) = SpeedBoost(seconds, speedup - 1)
+
 /** Parses the JSON from Clash of Clans' Settings → More Settings → Data Export. */
 class ExportParser(private val gameData: GameData) {
 
@@ -27,6 +32,12 @@ class ExportParser(private val gameData: GameData) {
         val labBoost = boosts?.long("lab_boost")?.coerceAtLeast(0) ?: 0
         val petBoost = boosts?.long("pet_boost")?.coerceAtLeast(0) ?: 0
         val clockTowerBoost = boosts?.long("clocktower_boost")?.coerceAtLeast(0) ?: 0
+        val builderBite = boosts?.long("builder_consumable")?.coerceAtLeast(0) ?: 0
+        val studySoup = boosts?.long("lab_consumable")?.coerceAtLeast(0) ?: 0
+        val builderBoosts = listOf(potionBoost(builderBoost, BUILDER_BOOST_SPEEDUP), potionBoost(builderBite, BUILDER_BITE_SPEEDUP))
+        val labBoosts = listOf(potionBoost(labBoost, LAB_BOOST_SPEEDUP), potionBoost(studySoup, STUDY_SOUP_SPEEDUP))
+        val petBoosts = listOf(potionBoost(petBoost, PET_BOOST_SPEEDUP))
+        val clockTowerBoosts = listOf(potionBoost(clockTowerBoost, CLOCK_TOWER_SPEEDUP))
         val townHallLevel = buildings.firstOrNull { it.int("data") == TOWN_HALL_ID }?.int("lvl")
         val builderCount = builderCount(buildings)
         val helpers = root.entries("helpers")
@@ -39,21 +50,23 @@ class ExportParser(private val gameData: GameData) {
             townHallLevel = townHallLevel,
             exportedAtEpochSec = exportedAt,
             builderCount = builderCount,
-            builderUpgrades = upgrades(root, BUILDER_SECTIONS, exportedAt, builderBoost, BUILDER_BOOST_SPEEDUP, apprentice.level())
+            builderUpgrades = upgrades(root, BUILDER_SECTIONS, exportedAt, builderBoosts, apprentice.level())
                 .sortedBy { it.finishesAtEpochSec },
-            labUpgrades = upgrades(root, LAB_SECTIONS, exportedAt, labBoost, LAB_BOOST_SPEEDUP, labAssistant.level())
+            labUpgrades = upgrades(root, LAB_SECTIONS, exportedAt, labBoosts, labAssistant.level())
                 .sortedBy { it.finishesAtEpochSec },
-            petUpgrades = upgrades(root, PET_SECTIONS, exportedAt, petBoost, PET_BOOST_SPEEDUP, helperLevel = 0)
+            petUpgrades = upgrades(root, PET_SECTIONS, exportedAt, petBoosts, helperLevel = 0)
                 .sortedBy { it.finishesAtEpochSec },
-            builderBaseUpgrades = upgrades(root, BUILDER_BASE_SECTIONS, exportedAt, clockTowerBoost, CLOCK_TOWER_SPEEDUP, helperLevel = 0)
+            builderBaseUpgrades = upgrades(root, BUILDER_BASE_SECTIONS, exportedAt, clockTowerBoosts, helperLevel = 0)
                 .sortedBy { it.finishesAtEpochSec },
-            starLabUpgrades = upgrades(root, STAR_LAB_SECTIONS, exportedAt, clockTowerBoost, CLOCK_TOWER_SPEEDUP, helperLevel = 0)
+            starLabUpgrades = upgrades(root, STAR_LAB_SECTIONS, exportedAt, clockTowerBoosts, helperLevel = 0)
                 .sortedBy { it.finishesAtEpochSec },
             builderBaseMaxed = allMaxed((BUILDER_BASE_SECTIONS + STAR_LAB_SECTIONS).flatMap { root.entries(it) }),
             builderBoostEndsAtEpochSec = (exportedAt + builderBoost).takeIf { builderBoost > 0 },
             labBoostEndsAtEpochSec = (exportedAt + labBoost).takeIf { labBoost > 0 },
             petBoostEndsAtEpochSec = (exportedAt + petBoost).takeIf { petBoost > 0 },
             clockTowerBoostEndsAtEpochSec = (exportedAt + clockTowerBoost).takeIf { clockTowerBoost > 0 },
+            builderBiteEndsAtEpochSec = (exportedAt + builderBite).takeIf { builderBite > 0 },
+            studySoupEndsAtEpochSec = (exportedAt + studySoup).takeIf { studySoup > 0 },
             apprenticeReadyAtEpochSec = apprentice?.readyAt(exportedAt),
             labAssistantReadyAtEpochSec = labAssistant?.readyAt(exportedAt),
             timeToMax = MaxTarget.entries.associateWith { maxCalculator.estimates(maxItems, it) },
@@ -74,8 +87,7 @@ class ExportParser(private val gameData: GameData) {
         root: JsonObject,
         sections: List<String>,
         exportedAt: Long,
-        boostSeconds: Long,
-        speedup: Long,
+        boosts: List<SpeedBoost>,
         helperLevel: Int,
     ): List<Upgrade> =
         sections.flatMap { root.entries(it) }.mapNotNull { entry ->
@@ -87,7 +99,7 @@ class ExportParser(private val gameData: GameData) {
                 dataId = dataId,
                 name = gameData.name(dataId),
                 targetLevel = targetLevel,
-                finishesAtEpochSec = exportedAt + realSeconds(timer, boostSeconds, speedup, helperSeconds, helperLevel),
+                finishesAtEpochSec = exportedAt + realSeconds(timer, boosts + SpeedBoost(helperSeconds, helperLevel.toLong())),
                 totalSeconds = gameData.upgradeSeconds(dataId, targetLevel),
                 isGoblin = entry.bool("extra"),
                 hasHelperAssigned = helperSeconds > 0 || entry.bool("helper_recurrent"),
@@ -95,16 +107,15 @@ class ExportParser(private val gameData: GameData) {
         }
 
     /**
-     * Export timers ignore active speed-ups. A potion makes work go [speedup]x faster for
-     * [boostSeconds] of real time, and a helper's shift adds [helperLevel] to the rate for
-     * [helperSeconds], since potions don't affect helpers. Later "keep assigned" shifts aren't counted.
+     * Export timers ignore active speed-ups. Each boost adds to the normal rate of 1x while it runs,
+     * so a Builder Potion (10x) with a Builder Bite (2x) makes 11x, and a helper's shift adds its
+     * level on top, since potions don't affect helpers. Later "keep assigned" shifts aren't counted.
      */
-    private fun realSeconds(timer: Long, boostSeconds: Long, speedup: Long, helperSeconds: Long, helperLevel: Int): Long {
+    private fun realSeconds(timer: Long, boosts: List<SpeedBoost>): Long {
         var workLeft = timer
         var elapsed = 0L
-        for (rateChange in listOf(boostSeconds, helperSeconds).filter { it > 0 }.sorted()) {
-            if (rateChange == elapsed) continue
-            val rate = (if (elapsed < boostSeconds) speedup else 1) + (if (elapsed < helperSeconds) helperLevel else 0)
+        for (rateChange in boosts.map { it.seconds }.filter { it > 0 }.distinct().sorted()) {
+            val rate = 1 + boosts.filter { elapsed < it.seconds }.sumOf { it.bonusRate }
             val phaseWork = (rateChange - elapsed) * rate
             if (workLeft <= phaseWork) return elapsed + (workLeft + rate - 1) / rate
             workLeft -= phaseWork
@@ -152,6 +163,8 @@ class ExportParser(private val gameData: GameData) {
         const val LAB_BOOST_SPEEDUP = 24L
         const val PET_BOOST_SPEEDUP = 24L
         const val CLOCK_TOWER_SPEEDUP = 10L
+        const val BUILDER_BITE_SPEEDUP = 2L
+        const val STUDY_SOUP_SPEEDUP = 4L
 
         private val BUILDER_SECTIONS = listOf("buildings", "traps", "heroes", "guardians")
         private val LAB_SECTIONS = listOf("units", "spells", "siege_machines")
