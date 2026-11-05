@@ -6,7 +6,7 @@ Android home-screen widgets that track your Clash of Clans builder, lab and pet 
 
 **[Download the latest APK](https://github.com/ww40/coc-widget/releases/latest)**
 
-<a href="https://github.com/ww40/coc-widget/releases/download/v0.1.12/builder-timer-widget-v0.1.12.apk"><img src="docs/download-apk-badge.png" alt="Download Android APK" width="220"></a>
+<a href="https://github.com/ww40/coc-widget/releases/download/v0.1.13/builder-timer-widget-v0.1.13.apk"><img src="docs/download-apk-badge.png" alt="Download Android APK" width="220"></a>
 
 - **Full widget:** every builder, lab, pet, Builder Base and Star Lab upgrade with icons, progress bars and countdowns (or finish times). Finished rows turn gold and the header shows free builders.
 - **Compact 2×1 widget:** the next upgrade to finish, how many builders are free and when your lab is next free.
