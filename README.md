@@ -200,6 +200,8 @@ Items the static data omits can be named (and given `upgradeSeconds`) in `tools/
 python3 tools/fetch_icons.py
 ```
 
+The Squad Barracks icons (`icon_1000106_<level>.webp`) are cut from in-game artwork until ClashKing publishes its own, and `fetch_icons.py` replaces them once it does.
+
 Items without an icon show a section emoji (🔨 builders, ⚗️ lab, 🐾 pets). `potion_builder.webp`, `potion_research.webp`, `potion_pet.webp`, `potion_clock_tower.webp`, `snack_builder_bite.webp` and `snack_study_soup.webp`, shown with the time left on an active boost, are ClashKing's `magic_items/builder_potion.webp`, `magic_items/research_potion.webp`, `magic_items/pet_potion.webp`, `magic_items/clock_tower_potion.webp`, `magic_snacks/builder_bite.webp` and `magic_snacks/study_soup.webp`.
 
 ## Behaviour notes
