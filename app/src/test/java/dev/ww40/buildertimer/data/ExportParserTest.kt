@@ -71,7 +71,7 @@ class ExportParserTest {
         assertTrue(goldStorage.hasHelperAssigned)
         assertEquals(goldStorage, snapshot.apprenticeTarget)
         assertEquals(19, goldStorage.targetLevel)
-        assertEquals(1_080_000L, goldStorage.totalSeconds)
+        assertEquals(648_000L, goldStorage.totalSeconds)
     }
 
     @Test
@@ -92,7 +92,7 @@ class ExportParserTest {
         val duke = parsed.builderUpgrades.single { it.name == "Dragon Duke" }
         assertEquals(23, duke.targetLevel)
         assertEquals(691_200L, duke.totalSeconds)
-        assertEquals(1_123_200L, parsed.builderUpgrades.single { it.name == "Hidden Tesla" }.totalSeconds)
+        assertEquals(777_600L, parsed.builderUpgrades.single { it.name == "Hidden Tesla" }.totalSeconds)
     }
 
     @Test
@@ -106,8 +106,8 @@ class ExportParserTest {
         val pet = snapshot.petUpgrades.single()
         assertEquals("Sneezy", pet.name)
         assertEquals(10, pet.targetLevel)
-        assertEquals(691_200L, pet.totalSeconds)
-        assertEquals(1f - 197_587f / 691_200f, pet.progress(EXPORTED_AT)!!, 0.0001f)
+        assertEquals(648_000L, pet.totalSeconds)
+        assertEquals(1f - 197_587f / 648_000f, pet.progress(EXPORTED_AT)!!, 0.0001f)
         assertEquals(1f, pet.progress(pet.finishesAtEpochSec + 10)!!, 0f)
     }
 

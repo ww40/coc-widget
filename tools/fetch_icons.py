@@ -12,6 +12,7 @@ Items without a match fall back to a section emoji in the widget.
 import json
 import re
 import sys
+import time
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -25,6 +26,8 @@ MANIFEST_URL = f"{CDN_URL}/manifest.json"
 STATIC_DATA_URL = f"{CDN_URL}/static_data/{{category}}.json"
 BUILDER_BASE_VILLAGE = "builderBase"
 USER_AGENT = "coc-widget-icon-fetch/0.1 (personal non-commercial project)"
+FETCH_ATTEMPTS = 4
+RETRY_DELAY_SECONDS = 20
 
 # Export data IDs are <type> * 1_000_000 + index.
 LEVELLED_PATHS = {1: "buildings/{village}/{name}/", 12: "traps/{village}/{name}/"}
@@ -40,9 +43,19 @@ LEVEL_FILE = re.compile(r"level_(\d+)\.webp$")
 
 
 def fetch(url: str) -> bytes:
+    """Retries network failures, since a burst of lookups can trip a local DNS rate limit."""
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-    with urllib.request.urlopen(request, timeout=30) as response:
-        return response.read()
+    for attempt in range(1, FETCH_ATTEMPTS + 1):
+        try:
+            with urllib.request.urlopen(request, timeout=30) as response:
+                return response.read()
+        except urllib.error.HTTPError:
+            raise
+        except urllib.error.URLError:
+            if attempt == FETCH_ATTEMPTS:
+                raise
+            time.sleep(RETRY_DELAY_SECONDS)
+    raise AssertionError("unreachable")
 
 
 def cleaned_name(name: str) -> str:
@@ -96,14 +109,17 @@ def main() -> None:
         if not files:
             missing.append(f"{data_id} {entry['name']}")
             continue
+        # Download everything first so a failed fetch leaves the item's existing icons in place.
+        try:
+            downloads = {file_name: fetch(f"{CDN_URL}/{path}") for file_name, path in files.items()}
+        except urllib.error.URLError as error:
+            print(f"Download failed for {data_id} {entry['name']}, kept existing icons: {error}", file=sys.stderr)
+            continue
         for old_file in OUTPUT_DIR.glob(f"icon_{data_id}_*.webp"):
             old_file.unlink()
-        for file_name, path in files.items():
-            try:
-                (OUTPUT_DIR / file_name).write_bytes(fetch(f"{CDN_URL}/{path}"))
-                saved += 1
-            except urllib.error.URLError as error:
-                print(f"Download failed for {file_name} ({path}): {error}", file=sys.stderr)
+        for file_name, content in downloads.items():
+            (OUTPUT_DIR / file_name).write_bytes(content)
+            saved += 1
 
     print(f"Saved {saved} icon files to {OUTPUT_DIR}")
     for item in missing:
